@@ -76,15 +76,15 @@ export default function SettingsPage() {
             <h3 className="text-xl font-serif italic">AI Intelligence (Gemini)</h3>
           </div>
           <div className="space-y-4">
-            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Generative AI API Key</label>
-            <input 
-              type="password" 
-              placeholder="Enter your Google/GitHub Gemini key"
-              className="w-full px-6 py-5 rounded-2xl bg-gray-50 dark:bg-gray-800 border-none outline-none ring-2 ring-transparent focus:ring-brand-rosegold/20 transition-all font-mono text-sm"
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Generative AI API Keys (Comma-Separated)</label>
+            <textarea 
+              placeholder="key1, key2, key3..."
+              rows={3}
+              className="w-full px-6 py-5 rounded-2xl bg-gray-50 dark:bg-gray-800 border-none outline-none ring-2 ring-transparent focus:ring-brand-rosegold/20 transition-all font-mono text-sm resize-none"
               value={settings.geminiKey}
               onChange={e => setSettings({...settings, geminiKey: e.target.value})}
             />
-            <p className="text-[10px] text-gray-400 leading-relaxed">Required for the automated "AI Suggest" feature that labels your product images.</p>
+            <p className="text-[10px] text-gray-400 leading-relaxed">Required for the automated "AI Suggest". You can enter multiple keys separated by commas (,) and the system will automatically cycle through them to prevent free-tier rate limits!</p>
           </div>
         </div>
 

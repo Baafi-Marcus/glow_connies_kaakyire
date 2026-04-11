@@ -40,11 +40,12 @@ export async function POST(req: Request) {
         if (error) reject(error);
         else resolve(result);
       }).end(buffer);
-    }) as any;
+    }) as unknown as { secure_url: string };
 
     return NextResponse.json({ url: result.secure_url });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Upload Error:', error);
-    return NextResponse.json({ error: 'Upload failed: ' + error.message }, { status: 500 });
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ error: 'Upload failed: ' + msg }, { status: 500 });
   }
 }

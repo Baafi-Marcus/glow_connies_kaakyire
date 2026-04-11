@@ -18,8 +18,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     });
 
     return NextResponse.json(updatedOrder);
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to update order' }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: 'Failed to update order status' }, { status: 500 });
   }
 }
 
@@ -28,7 +28,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const { id } = await params;
     await prisma.order.delete({ where: { id } });
     return NextResponse.json({ message: 'Order deleted successfully' });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to delete order' }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: 'Failed to fetch order' }, { status: 500 });
   }
 }

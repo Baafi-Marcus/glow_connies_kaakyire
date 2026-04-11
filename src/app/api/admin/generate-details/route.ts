@@ -20,7 +20,9 @@ export async function POST(req: Request) {
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(settings.geminiKey);
+    const keys = settings.geminiKey.split(',').map(k => k.trim()).filter(k => k.length > 0);
+    const activeKey = keys[Math.floor(Math.random() * keys.length)];
+    const genAI = new GoogleGenerativeAI(activeKey);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     // Fetch the image to send as binary to Gemini
@@ -54,8 +56,9 @@ export async function POST(req: Request) {
     const data = JSON.parse(jsonStr);
 
     return NextResponse.json(data);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('AI Generation Error:', error);
-    return NextResponse.json({ error: 'AI generation failed: ' + error.message }, { status: 500 });
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ error: 'AI generation failed: ' + msg }, { status: 500 });
   }
 }

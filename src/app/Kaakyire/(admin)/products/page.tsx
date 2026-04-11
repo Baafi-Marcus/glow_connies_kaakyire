@@ -59,7 +59,7 @@ export default function InventoryPage() {
 
   const fetchProducts = async () => {
     setLoading(true);
-    const res = await fetch('/api/products?admin=true');
+    const res = await fetch(`/api/products?admin=true&t=${Date.now()}`, { cache: 'no-store' });
     const data = await res.json();
     setProducts(data);
     setLoading(false);
@@ -222,8 +222,15 @@ export default function InventoryPage() {
 
   const handleDelete = async (id: string) => {
     if (confirm("Permanently remove this item from catalog?")) {
-      await fetch(`/api/products/${id}`, { method: 'DELETE' });
-      fetchProducts();
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error("Delete failed");
+        await fetchProducts();
+      } catch (error) {
+        alert("Failed to delete product. Please try again.");
+        setLoading(false);
+      }
     }
   };
 

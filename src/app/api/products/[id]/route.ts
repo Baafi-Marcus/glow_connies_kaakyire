@@ -22,7 +22,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       }
     });
     return NextResponse.json(updatedProduct);
-  } catch (error) {
+  } catch (error: unknown) {
     return NextResponse.json({ error: 'Failed to update product' }, { status: 500 });
   }
 }
@@ -32,7 +32,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const { id } = await params;
     await prisma.product.delete({ where: { id } });
     return NextResponse.json({ message: 'Product deleted successfully' });
-  } catch (error) {
+  } catch (error: unknown) {
     return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 });
   }
 }
