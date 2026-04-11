@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = 'https://glowbyconnie.local';
+  const baseUrl = 'https://glow-connies-kaakyire.vercel.app';
 
   return {
     rules: {
