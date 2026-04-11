@@ -13,16 +13,25 @@ function ProductsContent() {
   const searchParams = useSearchParams();
   const category = searchParams.get('category') || 'All';
 
-  useEffect(() => {
     const url = category && category !== 'All' 
       ? `/api/products?category=${category}` 
       : '/api/products';
       
-    setLoading(true);
-    fetch(url)
-      .then(res => res.ok ? res.json() : [])
-      .then(data => { setProducts(Array.isArray(data) ? data : []); setLoading(false); })
-      .catch(err => { console.error(err); setProducts([]); setLoading(false); });
+    const fetchCollection = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(url);
+        const data = res.ok ? await res.json() : [];
+        setProducts(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error(err);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchCollection();
   }, [category]);
 
   return (
@@ -103,7 +112,7 @@ function ProductsContent() {
             <div className="col-span-full py-40 text-center bg-gray-50/50 dark:bg-gray-800/10 rounded-[4rem] border-2 border-dashed border-gray-100 dark:border-gray-800">
               <ShoppingBagIcon className="w-24 h-24 mx-auto text-gray-200 dark:text-gray-800 mb-8" />
               <h2 className="text-4xl font-serif text-gray-400 uppercase tracking-[0.2em] mb-4">Coming Soon</h2>
-              <p className="text-gray-500 font-light text-xl">We're curating something special for you.</p>
+              <p className="text-gray-500 font-light text-xl">We&apos;re curating something special for you.</p>
             </div>
           )}
         </div>

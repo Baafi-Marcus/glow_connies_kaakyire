@@ -27,12 +27,22 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, { params }: { params: any }) {
   try {
     const { id } = await params;
-    await prisma.product.delete({ where: { id } });
-    return NextResponse.json({ message: 'Product deleted successfully' });
-  } catch (error: unknown) {
-    return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 });
+    console.log(`[API] Attempting to delete product: ${id}`);
+    
+    if (!id) throw new Error("Missing product ID");
+
+    const deletedProduct = await prisma.product.delete({ where: { id } });
+    console.log(`[API] Successfully deleted product: ${deletedProduct.name}`);
+    
+    return NextResponse.json({ message: 'Product deleted successfully', id });
+  } catch (error: any) {
+    console.error('[API] Product Deletion Error:', error.message || error);
+    return NextResponse.json({ 
+      error: 'Delete failed: ' + (error.message || 'Database error'),
+      details: error.meta || {} 
+    }, { status: 500 });
   }
 }

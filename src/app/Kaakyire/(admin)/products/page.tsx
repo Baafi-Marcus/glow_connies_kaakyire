@@ -225,10 +225,16 @@ export default function InventoryPage() {
       setLoading(true);
       try {
         const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
-        if (!res.ok) throw new Error("Delete failed");
+        const data = await res.json();
+        
+        if (!res.ok) {
+           throw new Error(data.error || "Delete failed");
+        }
+        
         await fetchProducts();
-      } catch (error) {
-        alert("Failed to delete product. Please try again.");
+      } catch (error: any) {
+        console.error("Delete UI Error:", error);
+        alert(`Failed to delete: ${error.message}`);
         setLoading(false);
       }
     }
