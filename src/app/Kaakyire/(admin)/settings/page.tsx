@@ -84,7 +84,7 @@ export default function SettingsPage() {
               value={settings.geminiKey}
               onChange={e => setSettings({...settings, geminiKey: e.target.value})}
             />
-            <p className="text-[10px] text-gray-400 leading-relaxed">Required for the automated "AI Suggest". You can enter multiple keys separated by commas (,) and the system will automatically cycle through them to prevent free-tier rate limits!</p>
+            <p className="text-[10px] text-gray-400 leading-relaxed">Required for the automated &quot;AI Suggest&quot;. You can enter multiple keys separated by commas (,) and the system will automatically cycle through them to prevent free-tier rate limits!</p>
           </div>
         </div>
 

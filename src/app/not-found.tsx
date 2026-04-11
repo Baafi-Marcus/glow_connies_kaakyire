@@ -19,8 +19,8 @@ export default function NotFound() {
       <div className="space-y-6 max-w-md">
         <h1 className="text-5xl font-serif text-brand-plum dark:text-brand-rosegold italic">Page Not Found</h1>
         <p className="text-gray-500 dark:text-gray-400 leading-relaxed font-light">
-          It seems the beauty you're looking for has moved or does not exist. 
-          Let's get you back to the collection.
+          It seems the beauty you&apos;re looking for has moved or does not exist. 
+          Let&apos;s get you back to the collection.
         </p>
         
         <div className="pt-8">

@@ -41,7 +41,7 @@ export default function TermsPage() {
 
         <section className="space-y-4">
           <h2 className="text-2xl font-serif text-brand-plum dark:text-brand-rosegold">4. Authenticity</h2>
-          <p>Glow by Connie guarantees the authenticity of all global brands sold. We do not sell replicates or "tester-only" versions advertised as full retail products.</p>
+          <p>Glow by Connie guarantees the authenticity of all global brands sold. We do not sell replicates or &quot;tester-only&quot; versions advertised as full retail products.</p>
         </section>
 
         <section className="space-y-4 pt-10 border-t border-gray-100 dark:border-gray-800">

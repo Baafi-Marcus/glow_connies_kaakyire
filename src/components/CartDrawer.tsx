@@ -2,7 +2,16 @@
 
 import { useState } from "react";
 import { XMarkIcon, ShoppingBagIcon } from "@heroicons/react/24/outline";
-import { useCart } from "@/context/CartContext";
+import { useCart, CartItem } from "@/context/CartContext";
+
+type Order = {
+  id: string;
+  customerName: string;
+  customerPhone: string;
+  location: string;
+  items: CartItem[];
+  totalAmount: number;
+};
 
 export default function CartDrawer() {
   const { cart, removeFromCart, cartTotal, clearCart, isCartOpen, setIsCartOpen } = useCart();
@@ -13,7 +22,7 @@ export default function CartDrawer() {
   const [phone, setPhone] = useState("");
   const [location, setLocation] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submittedOrder, setSubmittedOrder] = useState<any>(null);
+  const [submittedOrder, setSubmittedOrder] = useState<Order | null>(null);
 
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,13 +52,13 @@ export default function CartDrawer() {
     message += `*📍 Location:* ${submittedOrder.location}\n`;
     message += `--------------------------\n\n`;
     message += `*🛍️ ITEMS:*\n`;
-    submittedOrder.items.forEach((item: any) => {
+    submittedOrder.items.forEach((item: CartItem) => {
       message += `• ${item.name} x${item.quantity}\n`;
     });
     message += `\n--------------------------\n`;
     message += `*💰 TOTAL:* GHC ${submittedOrder.totalAmount}\n`;
     message += `--------------------------\n`;
-    message += `_I've received my order reference. Please send your MOMO details to finalize!_`;
+    message += `_I&apos;ve received my order reference. Please send your MOMO details to finalize!_`;
     
     const whatsappParams = new URLSearchParams({ text: message });
     window.open(`https://wa.me/233246702043?${whatsappParams.toString()}`, '_blank');
@@ -120,7 +129,7 @@ export default function CartDrawer() {
               </div>
               <div>
                 <h3 className="text-lg font-bold">Your cart is empty</h3>
-                <p className="text-gray-500 text-sm mt-1">Looks like you haven't added any glow yet.</p>
+                <p className="text-gray-500 text-sm mt-1">Looks like you haven&apos;t added any glow yet.</p>
               </div>
               <button 
                 onClick={() => setIsCartOpen(false)}

@@ -145,7 +145,7 @@ export default function Homepage() {
                 <h2 className="text-5xl md:text-7xl font-serif italic leading-tight">Your Journey <br /> to <span className="text-brand-rosegold">Radiance.</span></h2>
              </div>
              <p className="text-white/60 text-lg font-light leading-relaxed max-w-lg">
-                We've refined the luxury shopping experience for Ghana. Simple, personalized, and delivered with care.
+                We&apos;ve refined the luxury shopping experience for Ghana. Simple, personalized, and delivered with care.
              </p>
              <Link 
               href="/products" 
@@ -227,7 +227,7 @@ export default function Homepage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { name: "Ama Serwaa", city: "Accra", text: "The quality of the perfumes is unmatched. Every scent I've ordered has been 100% authentic and the delivery was incredibly fast!", stars: 5 },
+              { name: "Ama Serwaa", city: "Accra", text: "The quality of the perfumes is unmatched. Every scent I&apos;ve ordered has been 100% authentic and the delivery was incredibly fast!", stars: 5 },
               { name: "Kofi Owusu", city: "Kumasi", text: "I bought a handbag for my wife and she absolutely loves it. The process on WhatsApp was smooth and very professional.", stars: 5 },
               { name: "Naa Ayeley", city: "Tema", text: "Glow by Connie is my go-to for cosmetics. The selection is premium and I love that I can chat directly with the team.", stars: 5 }
             ].map((review, idx) => (
@@ -235,7 +235,7 @@ export default function Homepage() {
                 <div className="flex gap-1">
                   {[...Array(review.stars)].map((_, i) => <StarIconSolid key={i} className="w-4 h-4 text-brand-rosegold" />)}
                 </div>
-                <p className="text-gray-600 dark:text-gray-400 italic font-light leading-relaxed">"{review.text}"</p>
+                <p className="text-gray-600 dark:text-gray-400 italic font-light leading-relaxed">&quot;{review.text}&quot;</p>
                 <div className="pt-4 border-t border-gray-50 dark:border-gray-800 flex justify-between items-center">
                    <span className="font-bold text-sm tracking-tight">{review.name}</span>
                    <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{review.city}</span>
