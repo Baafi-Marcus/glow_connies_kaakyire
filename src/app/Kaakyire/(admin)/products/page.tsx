@@ -35,6 +35,8 @@ export default function InventoryPage() {
   const [categoryFilter, setCategoryFilter] = useState("All");
   
   // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({
     name: "", description: "", price: "", oldPrice: "", imageUrl: "", badgeLabel: "", category: "Perfumes", stock: "0", lowStockThreshold: "5", isAvailable: true
   });
