@@ -479,7 +479,6 @@ export default function InventoryPage() {
              <p className="text-gray-400 italic">No products matched your criteria.</p>
           </div>
         )}
-      </div>
 
       {/* Modal */}
       {isModalOpen && (
