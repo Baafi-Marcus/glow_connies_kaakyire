@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Bars3Icon, ShoppingBagIcon } from "@heroicons/react/24/outline";
+import { Bars3Icon, ShoppingBagIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { useCart } from "@/context/CartContext";
 import GlowLogo from "./GlowLogo";
 
 export default function Navbar() {
-  const { setIsMenuOpen, setIsCartOpen, cart } = useCart();
+  const { setIsMenuOpen, setIsCartOpen, setIsSearchOpen, cart } = useCart();
 
   return (
     <nav className="sticky top-0 z-50 bg-white/85 dark:bg-[#1E1E1E]/85 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex justify-between items-center">
@@ -25,6 +25,13 @@ export default function Navbar() {
       </Link>
 
       <div className="flex items-center gap-2">
+        <button 
+          onClick={() => setIsSearchOpen(true)}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+          title="Search"
+        >
+          <MagnifyingGlassIcon className="w-7 h-7 text-gray-700 dark:text-gray-300" />
+        </button>
         <button 
           onClick={() => setIsCartOpen(true)}
           className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
