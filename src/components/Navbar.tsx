@@ -23,8 +23,8 @@ export default function Navbar() {
 
       {!isSearchOpen && (
         <Link href="/" className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
-          <img src="/logo.png" alt="Glow by Connie Logo" className="h-10 w-auto rounded-full" />
-          <GlowLogo size="md" className="hidden sm:flex" />
+          <img src="/android-chrome-512x512.png" alt="Glow by Connie Logo" className="h-12 w-auto scale-110 drop-shadow-md rounded-full" />
+          <GlowLogo size="lg" className="hidden sm:flex" />
         </Link>
       )}
 
