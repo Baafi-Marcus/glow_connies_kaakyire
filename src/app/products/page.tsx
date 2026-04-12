@@ -169,8 +169,11 @@ function ProductsContent() {
           {Array.isArray(sortedProducts) && sortedProducts.map(product => {
             const { rating, reviews } = getProductRating(product.id);
             return (
-              <div key={product.id} onClick={() => setSelectedProduct(product)} className="group flex flex-col cursor-pointer animate-in fade-in zoom-in-95 duration-700">
-                <div className="relative h-[16rem] md:h-[26rem] bg-gray-50 dark:bg-[#121212] w-full rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden border border-gray-50 dark:border-gray-900 shadow-sm group-hover:shadow-2xl transition-all duration-700 group-hover:-translate-y-2">
+              <div key={product.id} className="group flex flex-col animate-in fade-in zoom-in-95 duration-700">
+                <div 
+                  onClick={() => setSelectedProduct(product)}
+                  className="relative h-[16rem] md:h-[26rem] bg-gray-50 dark:bg-[#121212] w-full rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden border border-gray-50 dark:border-gray-900 shadow-sm group-hover:shadow-2xl transition-all duration-700 group-hover:-translate-y-2 cursor-pointer"
+                >
                   <AppImage 
                     src={product.imageUrl} 
                     alt={product.name} 
@@ -196,19 +199,6 @@ function ProductsContent() {
                   <div className="absolute bottom-4 md:bottom-6 left-4 md:left-6 bg-white/80 dark:bg-black/80 backdrop-blur-md px-3 md:px-4 py-1 md:py-1.5 rounded-full text-[7px] md:text-[8px] font-black text-brand-plum dark:text-brand-rosegold uppercase tracking-[.3em] shadow-sm">
                     {product.category}
                   </div>
-
-                  {/* Circular Quick Add button on hover */}
-                  <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                    <div 
-                      className="bg-white/90 dark:bg-[#1E1E1E]/90 backdrop-blur-xl h-20 w-20 rounded-full shadow-2xl scale-50 group-hover:scale-100 transition-all duration-500 flex items-center justify-center pointer-events-auto"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        addToCart(product);
-                      }}
-                    >
-                      <PlusIcon className="w-10 h-10 text-brand-plum dark:text-brand-rosegold" />
-                    </div>
-                  </div>
                 </div>
 
                 <div className="mt-4 md:mt-8 px-1 md:px-2 space-y-2 md:space-y-3">
@@ -222,13 +212,28 @@ function ProductsContent() {
                   </div>
 
                   <h3 className="text-lg md:text-2xl font-bold line-clamp-1 group-hover:text-brand-plum dark:group-hover:text-brand-rosegold transition-colors duration-300">{product.name}</h3>
-                  <p className="text-gray-400 text-[10px] md:text-xs line-clamp-1 italic font-light">{product.description}</p>
-                  
-                  <div className="pt-1 md:pt-2 flex items-baseline gap-2 md:gap-4">
-                    <p className="font-serif italic text-xl md:text-3xl text-brand-plum dark:text-brand-rosegold font-bold">₵{product.price.toLocaleString()}</p>
-                    {product.oldPrice && (
-                      <p className="text-[10px] md:text-sm text-gray-400 line-through font-bold">₵{product.oldPrice.toLocaleString()}</p>
-                    )}
+                  <div className="flex justify-between items-end gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-gray-400 text-[10px] md:text-xs line-clamp-1 italic font-light">{product.description}</p>
+                      
+                      <div className="pt-1 md:pt-2 flex items-baseline gap-2 md:gap-4">
+                        <p className="font-serif italic text-xl md:text-3xl text-brand-plum dark:text-brand-rosegold font-bold">₵{product.price.toLocaleString()}</p>
+                        {product.oldPrice && (
+                          <p className="text-[10px] md:text-sm text-gray-400 line-through font-bold">₵{product.oldPrice.toLocaleString()}</p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <button 
+                      className="h-10 w-10 md:h-14 md:w-14 bg-brand-plum text-white dark:bg-brand-rosegold dark:text-black rounded-full flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all flex-shrink-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToCart(product);
+                      }}
+                      title="Add to Bag"
+                    >
+                      <PlusIcon className="w-5 h-5 md:w-7 md:h-7" />
+                    </button>
                   </div>
                 </div>
               </div>
