@@ -4,8 +4,11 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import AppImage from "@/components/AppImage";
 import { useCart, Product } from "@/context/CartContext";
-import { FunnelIcon, ShoppingBagIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { FunnelIcon, ShoppingBagIcon, PlusIcon, StarIcon } from "@heroicons/react/24/solid";
+import { StarIcon as StarOutline } from "@heroicons/react/24/outline";
 import ProductDetailModal from "@/components/ProductDetailModal";
+import FilterDrawer from "@/components/FilterDrawer";
+import { useRouter } from "next/navigation";
 
 function ProductsContent() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -13,8 +16,15 @@ function ProductsContent() {
   const { addToCart } = useCart();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const searchParams = useSearchParams();
+  const router = useRouter();
   const category = searchParams.get('category') || 'All';
   const [activeSubCategory, setActiveSubCategory] = useState<string>("All");
+  
+  // Advanced Filter State
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [activeSort, setActiveSort] = useState("popular");
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000]);
+  const [currentPriceRange, setCurrentPriceRange] = useState<[number, number]>([0, 2000]);
 
   useEffect(() => {
     const url = category && category !== 'All' 
@@ -39,11 +49,43 @@ function ProductsContent() {
     setActiveSubCategory("All");
   }, [category]);
 
+  useEffect(() => {
+    if (products.length > 0) {
+      const maxPrice = Math.max(...products.map(p => p.price));
+      const roundedMax = Math.ceil(maxPrice / 100) * 100;
+      setPriceRange([0, roundedMax]);
+      setCurrentPriceRange([0, roundedMax]);
+    }
+  }, [products]);
+
   const subCategories = ["All", ...Array.from(new Set(products.map(p => p.subCategory).filter(Boolean)))];
 
-  const finalFilteredProducts = activeSubCategory === "All" 
-    ? products 
-    : products.filter(p => p.subCategory === activeSubCategory);
+  // Helper for stable random ratings (hash based on product.id)
+  const getProductRating = (id: string) => {
+    const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const rating = 4 + (hash % 11) / 10; // 4.0 to 5.0
+    const reviews = 10 + (hash % 200);
+    return { rating, reviews };
+  };
+
+  const filteredProducts = products.filter(p => {
+    const matchesSub = activeSubCategory === "All" || p.subCategory === activeSubCategory;
+    const matchesPrice = p.price >= currentPriceRange[0] && p.price <= currentPriceRange[1];
+    return matchesSub && matchesPrice;
+  });
+
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    if (activeSort === "price_low") return a.price - b.price;
+    if (activeSort === "price_high") return b.price - a.price;
+    if (activeSort === "newest") return new Date(b.id).getTime() - new Date(a.id).getTime(); // Placeholder since we don't have createdAt, ID is usually sequential
+    if (activeSort === "top_rated") return getProductRating(b.id).rating - getProductRating(a.id).rating;
+    return 0; // popular
+  });
+
+  const categoryCounts = ["All", "Perfumes", "Accessories", "Beauty"].map(name => ({
+    name,
+    count: products.filter(p => name === "All" || p.category === name).length
+  }));
 
   return (
     <div className="w-full">
@@ -79,15 +121,42 @@ function ProductsContent() {
         )}
       </div>
 
-      <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-12">
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400">
-          Showing {finalFilteredProducts.length} Results
-        </p>
-        <button className="flex items-center gap-3 px-10 py-6 bg-white dark:bg-[#1E1E1E] border border-gray-100 dark:border-gray-800 rounded-[2rem] shadow-sm hover:shadow-2xl transition-all duration-500 group">
-          <FunnelIcon className="w-6 h-6 text-brand-rosegold group-hover:rotate-180 transition-transform duration-700" />
-          <span className="font-black tracking-[0.2em] uppercase text-xs">Primary Focus</span>
+      <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-6 mb-12 px-2">
+        <div className="space-y-1">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400">Inventory Status</p>
+          <h2 className="text-2xl font-serif italic text-brand-plum dark:text-brand-rosegold">
+            {sortedProducts.length} {sortedProducts.length === 1 ? 'Product' : 'Products'} available
+          </h2>
+        </div>
+        <button 
+          onClick={() => setIsFilterOpen(true)}
+          className="flex items-center gap-4 px-12 py-6 bg-white dark:bg-[#1E1E1E] border border-gray-100 dark:border-gray-800 rounded-[2.5rem] shadow-sm hover:shadow-2xl hover:border-brand-rosegold/30 transition-all duration-500 group"
+        >
+          <FunnelIcon className="w-5 h-5 text-brand-rosegold group-hover:rotate-180 transition-transform duration-700" />
+          <span className="font-black tracking-[0.2em] uppercase text-[10px]">Customize View</span>
         </button>
       </div>
+
+      <FilterDrawer 
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        categories={categoryCounts}
+        activeCategory={category}
+        onCategoryChange={(cat) => {
+          if (cat === "All") router.push('/products');
+          else router.push(`/products?category=${cat}`);
+          setIsFilterOpen(false);
+        }}
+        activeSort={activeSort}
+        onSortChange={(s) => {
+          setActiveSort(s);
+          setIsFilterOpen(false);
+        }}
+        priceRange={priceRange}
+        currentPriceRange={currentPriceRange}
+        onPriceChange={setCurrentPriceRange}
+        totalProducts={sortedProducts.length}
+      />
       
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12">
@@ -96,57 +165,76 @@ function ProductsContent() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12">
-          {Array.isArray(finalFilteredProducts) && finalFilteredProducts.map(product => (
-            <div key={product.id} onClick={() => setSelectedProduct(product)} className="group bg-white dark:bg-[#1E1E1E] rounded-[3rem] overflow-hidden shadow-sm hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.4)] transition-all duration-700 border border-gray-100 dark:border-gray-800 flex flex-col cursor-pointer">
-              <div className="relative h-[22rem] bg-gray-50 dark:bg-gray-900 w-full overflow-hidden">
-                <AppImage 
-                  src={product.imageUrl} 
-                  alt={product.name} 
-                  fill 
-                  className="object-cover group-hover:scale-110 transition-transform duration-1000" 
-                />
-                
-                {/* Marketing Badge */}
-                {product.badgeLabel && (
-                  <div className="absolute top-8 left-8 bg-brand-plum text-white px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[.3em] shadow-2xl z-20">
-                    {product.badgeLabel}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-10 gap-y-20">
+          {Array.isArray(sortedProducts) && sortedProducts.map(product => {
+            const { rating, reviews } = getProductRating(product.id);
+            return (
+              <div key={product.id} onClick={() => setSelectedProduct(product)} className="group flex flex-col cursor-pointer animate-in fade-in zoom-in-95 duration-700">
+                <div className="relative h-[26rem] bg-gray-50 dark:bg-[#121212] w-full rounded-[2.5rem] overflow-hidden border border-gray-50 dark:border-gray-900 shadow-sm group-hover:shadow-2xl transition-all duration-700 group-hover:-translate-y-2">
+                  <AppImage 
+                    src={product.imageUrl} 
+                    alt={product.name} 
+                    fill 
+                    className="object-cover group-hover:scale-110 transition-transform duration-1000" 
+                  />
+                  
+                  {/* Luxury Badges */}
+                  <div className="absolute top-6 left-6 flex flex-col gap-2 z-20">
+                    {product.badgeLabel && (
+                      <div className="bg-brand-plum text-white px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-[.2em] shadow-xl">
+                        {product.badgeLabel}
+                      </div>
+                    )}
+                    {product.oldPrice && (
+                      <div className="bg-red-500 text-white px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-[.2em] shadow-xl">
+                        HOT
+                      </div>
+                    )}
                   </div>
-                )}
 
-                <div className="absolute bottom-8 left-8 bg-white/95 dark:bg-black/95 backdrop-blur-xl px-4 py-1.5 rounded-full text-[8px] font-black text-brand-plum dark:text-brand-rosegold uppercase tracking-[.3em] shadow-sm">
-                  {product.category}
-                </div>
-              </div>
-              <div className="p-10 flex-1 flex flex-col">
-                <h3 className="text-3xl font-bold mb-3 group-hover:text-brand-rosegold transition-colors duration-300">{product.name}</h3>
-                <p className="text-gray-500 dark:text-gray-400 mb-10 flex-1 line-clamp-2 text-sm leading-relaxed font-light">{product.description}</p>
-                
-                <div className="flex justify-between items-center mt-auto">
-                  <div>
-                    <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest block mb-1">GHC PRICE</span>
-                    <div className="flex items-baseline gap-3">
-                      <p className="font-black text-3xl text-brand-plum dark:text-brand-rosegold">{product.price.toLocaleString()}</p>
-                      {product.oldPrice && (
-                        <p className="text-sm text-gray-400 line-through font-bold">GHC {product.oldPrice.toLocaleString()}</p>
-                      )}
+                  {/* Category Pill Over Image */}
+                  <div className="absolute bottom-6 left-6 bg-white/80 dark:bg-black/80 backdrop-blur-md px-4 py-1.5 rounded-full text-[8px] font-black text-brand-plum dark:text-brand-rosegold uppercase tracking-[.3em] shadow-sm">
+                    {product.category}
+                  </div>
+
+                  {/* Circular Quick Add button on hover */}
+                  <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                    <div 
+                      className="bg-white/90 dark:bg-[#1E1E1E]/90 backdrop-blur-xl h-20 w-20 rounded-full shadow-2xl scale-50 group-hover:scale-100 transition-all duration-500 flex items-center justify-center pointer-events-auto"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToCart(product);
+                      }}
+                    >
+                      <PlusIcon className="w-10 h-10 text-brand-plum dark:text-brand-rosegold" />
                     </div>
                   </div>
-                  <button 
-                    className="inline-flex items-center justify-center h-16 w-16 rounded-[1.5rem] bg-brand-plum dark:bg-brand-rosegold text-white dark:text-black hover:rotate-90 hover:scale-110 transition-all duration-500 shadow-2xl active:scale-90" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      addToCart(product);
-                    }}
-                    title="Add to Bag"
-                  >
-                    <PlusIcon className="w-10 h-10" />
-                  </button>
+                </div>
+
+                <div className="mt-8 px-2 space-y-3">
+                  <div className="flex items-center gap-1.5">
+                    {[...Array(5)].map((_, i) => (
+                      i < Math.floor(rating) ? 
+                        <StarIcon key={i} className="w-4 h-4 text-brand-rosegold" /> : 
+                        <StarOutline key={i} className="w-4 h-4 text-gray-300 dark:text-gray-700" />
+                    ))}
+                    <span className="text-[11px] font-bold text-gray-400 ml-1">({reviews})</span>
+                  </div>
+
+                  <h3 className="text-2xl font-bold line-clamp-1 group-hover:text-brand-plum dark:group-hover:text-brand-rosegold transition-colors duration-300">{product.name}</h3>
+                  <p className="text-gray-400 text-xs line-clamp-1 italic font-light">{product.description}</p>
+                  
+                  <div className="pt-2 flex items-baseline gap-4">
+                    <p className="font-serif italic text-3xl text-brand-plum dark:text-brand-rosegold font-bold">₵{product.price.toLocaleString()}</p>
+                    {product.oldPrice && (
+                      <p className="text-sm text-gray-400 line-through font-bold">₵{product.oldPrice.toLocaleString()}</p>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-          {finalFilteredProducts.length === 0 && (
+            );
+          })}
+          {sortedProducts.length === 0 && (
             <div className="col-span-full py-40 text-center bg-gray-50/50 dark:bg-gray-800/10 rounded-[4rem] border-2 border-dashed border-gray-100 dark:border-gray-800">
               <ShoppingBagIcon className="w-24 h-24 mx-auto text-gray-200 dark:text-gray-800 mb-8" />
               <h2 className="text-4xl font-serif text-gray-400 uppercase tracking-[0.2em] mb-4">Coming Soon</h2>
