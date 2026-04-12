@@ -35,11 +35,11 @@ export default function InventoryPage() {
   const [categoryFilter, setCategoryFilter] = useState("All");
   
   // Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({
     name: "", description: "", price: "", oldPrice: "", imageUrl: "", badgeLabel: "", category: "Perfumes", stock: "0", lowStockThreshold: "5", isAvailable: true
   });
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   
   // Bulk Upload State
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
@@ -48,6 +48,7 @@ export default function InventoryPage() {
   const [bulkStatus, setBulkStatus] = useState("");
   const [bulkCategory, setBulkCategory] = useState("Perfumes");
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+  const [publishImmediately, setPublishImmediately] = useState(false);
   
   // Single Upload State
   const [isUploading, setIsUploading] = useState(false);
@@ -105,7 +106,7 @@ export default function InventoryPage() {
             category: bulkCategory,
             stock: "0",
             lowStockThreshold: "5",
-            isAvailable: false // Saved as draft
+            isAvailable: publishImmediately // Use new flag
           })
         });
       } catch (error) {
@@ -240,6 +241,44 @@ export default function InventoryPage() {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    
+    if (confirm(`Are you sure you want to PERMANENTLY delete ${selectedIds.length} items? This cannot be undone.`)) {
+      setIsBulkDeleting(true);
+      try {
+        const res = await fetch('/api/admin/bulk-delete', {
+          method: 'POST',
+          body: JSON.stringify({ ids: selectedIds })
+        });
+        const data = await res.json();
+        
+        if (!res.ok) throw new Error(data.error || "Bulk delete failed");
+        
+        setSelectedIds([]);
+        await fetchProducts();
+      } catch (error: any) {
+        alert(error.message);
+      } finally {
+        setIsBulkDeleting(false);
+      }
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredProducts.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredProducts.map(p => p.id));
+    }
+  };
+
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
@@ -248,6 +287,16 @@ export default function InventoryPage() {
           <p className="text-gray-500 font-light text-lg">Manage your products and inventory</p>
         </div>
         <div className="flex gap-4">
+          {selectedIds.length > 0 && (
+            <button 
+              onClick={handleBulkDelete}
+              disabled={isBulkDeleting}
+              className="px-8 py-4 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 border border-red-100 dark:bg-red-900/10 dark:border-red-900/20"
+            >
+              <TrashIcon className="w-4 h-4" /> 
+              {isBulkDeleting ? 'Deleting...' : `Delete ${selectedIds.length} Selection`}
+            </button>
+          )}
           <button 
             onClick={() => setIsBulkModalOpen(true)}
             className="px-8 py-4 bg-brand-plum/10 text-brand-plum hover:bg-brand-plum hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2"
@@ -258,7 +307,7 @@ export default function InventoryPage() {
             onClick={() => handleOpenModal()} 
             className="px-8 py-4 bg-brand-plum text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-brand-plum/20 hover:scale-105 transition-all active:scale-95 flex items-center gap-2"
           >
-            <PlusIcon className="w-4 h-4" /> Launch Product
+            <PlusIcon className="w-4 h-4" /> New Product
           </button>
         </div>
       </div>
@@ -292,7 +341,15 @@ export default function InventoryPage() {
           <table className="w-full text-left">
             <thead>
               <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 bg-gray-50/50 dark:bg-gray-800/50 border-b border-gray-50 dark:border-gray-800">
-                <th className="py-6 px-10">Product</th>
+                <th className="py-6 px-10 w-20">
+                  <input 
+                    type="checkbox" 
+                    className="w-5 h-5 rounded border-gray-300 text-brand-plum focus:ring-brand-plum cursor-pointer" 
+                    checked={selectedIds.length > 0 && selectedIds.length === filteredProducts.length}
+                    onChange={toggleSelectAll}
+                  />
+                </th>
+                <th className="py-6 px-4">Product</th>
                 <th className="py-6 px-4 text-center">Stock</th>
                 <th className="py-6 px-4">Price</th>
                 <th className="py-6 px-10 text-right">Actions</th>
@@ -300,8 +357,16 @@ export default function InventoryPage() {
             </thead>
             <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
               {filteredProducts.map(product => (
-                <tr key={product.id} className="group hover:bg-gray-50/50 dark:hover:bg-gray-800/10 transition-colors">
+                <tr key={product.id} className={`group hover:bg-gray-50/50 dark:hover:bg-gray-800/10 transition-colors ${selectedIds.includes(product.id) ? 'bg-brand-plum/5 dark:bg-brand-rosegold/5' : ''}`}>
                   <td className="py-6 px-10">
+                    <input 
+                      type="checkbox" 
+                      className="w-5 h-5 rounded border-gray-300 text-brand-plum focus:ring-brand-plum cursor-pointer"
+                      checked={selectedIds.includes(product.id)}
+                      onChange={() => toggleSelect(product.id)}
+                    />
+                  </td>
+                  <td className="py-6 px-4">
                     <div className="flex items-center gap-6">
                       <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 group-hover:scale-110 transition-transform duration-500">
                         <AppImage src={product.imageUrl} alt={product.name} fill />
@@ -512,6 +577,19 @@ export default function InventoryPage() {
                     >
                       {categories.filter(c => c !== "All").map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
+                  </div>
+
+                  <div className="flex items-center gap-4 py-4 px-2">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="sr-only peer" 
+                        checked={publishImmediately} 
+                        onChange={e => setPublishImmediately(e.target.checked)} 
+                      />
+                      <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-brand-plum"></div>
+                      <span className="ml-3 text-[10px] font-black uppercase tracking-widest text-gray-500">Auto-Publish to Users</span>
+                    </label>
                   </div>
 
                   <div className="relative group min-h-[200px] border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-3xl flex flex-col items-center justify-center p-10 hover:border-brand-rosegold transition-colors">

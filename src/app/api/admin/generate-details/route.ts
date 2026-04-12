@@ -21,7 +21,18 @@ export async function POST(req: Request) {
 
   try {
     const keys = settings.geminiKey.split(',').map(k => k.trim()).filter(k => k.length > 0);
+    
+    // Validate key formats
+    const invalidKeys = keys.filter(k => k.startsWith('ghp_'));
+    if (invalidKeys.length > 0) {
+      throw new Error(`Invalid Key Format: You are using GitHub tokens (starting with 'ghp_'). Please use Google Gemini API keys (starting with 'AIza') for AI generation.`);
+    }
+
     const activeKey = keys[Math.floor(Math.random() * keys.length)];
+    if (!activeKey || !activeKey.startsWith('AIza')) {
+       throw new Error(`Invalid Key: The selected key does not appear to be a valid Google Gemini API key.`);
+    }
+
     const genAI = new GoogleGenerativeAI(activeKey);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
