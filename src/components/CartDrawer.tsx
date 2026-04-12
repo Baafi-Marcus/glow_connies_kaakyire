@@ -176,18 +176,18 @@ export default function CartDrawer() {
               ) : (
                 <form id="checkout-form" onSubmit={handleCheckout} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold uppercase text-gray-400 mb-1 leading-none">Full Name</label>
-                    <input required className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800" value={name} onChange={e => setName(e.target.value)} placeholder="Akosua Mensah" />
+                    <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1 leading-none">Full Name</label>
+                    <input required className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm" value={name} onChange={e => setName(e.target.value)} placeholder="Akosua Mensah" />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold uppercase text-gray-400 mb-1 leading-none">WhatsApp Number</label>
-                    <input required type="tel" className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800" value={phone} onChange={e => setPhone(e.target.value)} placeholder="024 XXX XXXX" />
+                    <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1 leading-none">WhatsApp Number</label>
+                    <input required type="tel" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm" value={phone} onChange={e => setPhone(e.target.value)} placeholder="024 XXX XXXX" />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold uppercase text-gray-400 mb-1 leading-none">Region</label>
+                    <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1 leading-none">Region</label>
                     <select 
                       required 
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 appearance-none cursor-pointer" 
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 appearance-none cursor-pointer text-sm" 
                       value={region} 
                       onChange={e => setRegion(e.target.value)}
                     >
@@ -197,8 +197,8 @@ export default function CartDrawer() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold uppercase text-gray-400 mb-1 leading-none">Delivery Location / House Address</label>
-                    <textarea required className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800" value={location} onChange={e => setLocation(e.target.value)} placeholder="House No, Landmark, Street name..." rows={3} />
+                    <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1 leading-none">Delivery Location / House Address</label>
+                    <textarea required className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm" value={location} onChange={e => setLocation(e.target.value)} placeholder="House No, Landmark, Street name..." rows={2} />
                   </div>
                 </form>
               )}
@@ -207,23 +207,23 @@ export default function CartDrawer() {
         </div>
 
         {cart.length > 0 && (
-          <div className="p-6 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
-            <div className="flex justify-between items-end mb-6">
-              <span className="text-gray-500 font-medium">Subtotal</span>
-              <span className="text-2xl font-bold text-brand-plum dark:text-brand-rosegold">GHC {cartTotal}</span>
+          <div className="p-4 md:p-6 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
+            <div className="flex justify-between items-end mb-4 md:mb-6">
+              <span className="text-gray-500 font-medium text-sm">Subtotal</span>
+              <span className="text-xl md:text-2xl font-bold text-brand-plum dark:text-brand-rosegold">GHC {cartTotal}</span>
             </div>
             
             {isCheckout ? (
               <div className="flex gap-3">
-                <button type="button" onClick={() => setIsCheckout(false)} className="flex-1 py-4 font-bold text-gray-500 hover:text-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl transition-colors">Back</button>
-                <button form="checkout-form" type="submit" className="flex-[2] bg-[#25D366] hover:bg-[#1ebd5c] text-white font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2">
+                <button type="button" onClick={() => setIsCheckout(false)} className="flex-1 py-3 md:py-4 font-bold text-xs md:text-sm text-gray-500 hover:text-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl transition-colors">Back</button>
+                <button form="checkout-form" type="submit" className="flex-[2] bg-[#25D366] hover:bg-[#1ebd5c] text-white font-bold py-3 md:py-4 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2 text-xs md:text-sm">
                   Order via WhatsApp
                 </button>
               </div>
             ) : (
               <button 
                 onClick={() => setIsCheckout(true)}
-                className="w-full bg-brand-plum dark:bg-brand-rosegold text-white dark:text-black font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-[0.98]"
+                className="w-full bg-brand-plum dark:bg-brand-rosegold text-white dark:text-black font-bold py-3 md:py-4 rounded-xl shadow-lg transition-transform active:scale-[0.98] text-sm md:text-base"
               >
                 Proceed to Checkout
               </button>

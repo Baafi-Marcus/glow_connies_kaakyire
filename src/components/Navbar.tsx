@@ -9,14 +9,14 @@ export default function Navbar() {
   const { setIsMenuOpen, setIsCartOpen, isSearchOpen, setIsSearchOpen, searchQuery, setSearchQuery, cart } = useCart();
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/85 dark:bg-[#1E1E1E]/85 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex justify-between items-center">
+    <nav className="sticky top-0 z-50 bg-white/85 dark:bg-[#1E1E1E]/85 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-4 md:px-6 py-3 md:py-4 flex justify-between items-center">
       {!isSearchOpen && (
         <div className="flex items-center gap-4 animate-in fade-in slide-in-from-left-4 duration-500">
           <button 
             onClick={() => setIsMenuOpen(true)}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
           >
-            <Bars3Icon className="w-7 h-7 text-gray-700 dark:text-gray-300" />
+            <Bars3Icon className="w-6 h-6 md:w-7 md:h-7 text-gray-700 dark:text-gray-300" />
           </button>
         </div>
       )}
@@ -56,7 +56,7 @@ export default function Navbar() {
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
             title="Search"
           >
-            <MagnifyingGlassIcon className="w-7 h-7 text-gray-700 dark:text-gray-300" />
+            <MagnifyingGlassIcon className="w-6 h-6 md:w-7 md:h-7 text-gray-700 dark:text-gray-300" />
           </button>
         )}
         
@@ -65,9 +65,9 @@ export default function Navbar() {
             onClick={() => setIsCartOpen(true)}
             className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
           >
-            <ShoppingBagIcon className="w-7 h-7 text-gray-700 dark:text-gray-300" />
+            <ShoppingBagIcon className="w-6 h-6 md:w-7 md:h-7 text-gray-700 dark:text-gray-300" />
             {cart.length > 0 && (
-              <span className="absolute top-0 right-0 bg-brand-rosegold text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white dark:border-[#1E1E1E]">
+              <span className="absolute top-0 right-0 bg-brand-rosegold text-white text-[10px] font-bold w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded-full border-2 border-white dark:border-[#1E1E1E]">
                 {cart.length}
               </span>
             )}

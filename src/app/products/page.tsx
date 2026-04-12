@@ -172,7 +172,7 @@ function ProductsContent() {
               <div key={product.id} className="group flex flex-col animate-in fade-in zoom-in-95 duration-700">
                 <div 
                   onClick={() => setSelectedProduct(product)}
-                  className="relative h-[16rem] md:h-[26rem] bg-gray-50 dark:bg-[#121212] w-full rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden border border-gray-50 dark:border-gray-900 shadow-sm group-hover:shadow-2xl transition-all duration-700 group-hover:-translate-y-2 cursor-pointer"
+                  className="relative h-[14rem] md:h-[26rem] bg-gray-50 dark:bg-[#121212] w-full rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden border border-gray-50 dark:border-gray-900 shadow-sm group-hover:shadow-2xl transition-all duration-700 group-hover:-translate-y-2 cursor-pointer"
                 >
                   <AppImage 
                     src={product.imageUrl} 
@@ -211,13 +211,13 @@ function ProductsContent() {
                     <span className="text-[9px] md:text-[11px] font-bold text-gray-400 ml-1">({reviews})</span>
                   </div>
 
-                  <h3 className="text-lg md:text-2xl font-bold line-clamp-1 group-hover:text-brand-plum dark:group-hover:text-brand-rosegold transition-colors duration-300">{product.name}</h3>
+                  <h3 className="text-base md:text-2xl font-bold line-clamp-1 group-hover:text-brand-plum dark:group-hover:text-brand-rosegold transition-colors duration-300">{product.name}</h3>
                   <div className="flex justify-between items-end gap-2">
                     <div className="flex-1 min-w-0">
                       <p className="text-gray-400 text-[10px] md:text-xs line-clamp-1 italic font-light">{product.description}</p>
                       
                       <div className="pt-1 md:pt-2 flex items-baseline gap-2 md:gap-4">
-                        <p className="font-serif italic text-xl md:text-3xl text-brand-plum dark:text-brand-rosegold font-bold">₵{product.price.toLocaleString()}</p>
+                        <p className="font-serif italic text-lg md:text-3xl text-brand-plum dark:text-brand-rosegold font-bold">₵{product.price.toLocaleString()}</p>
                         {product.oldPrice && (
                           <p className="text-[10px] md:text-sm text-gray-400 line-through font-bold">₵{product.oldPrice.toLocaleString()}</p>
                         )}
