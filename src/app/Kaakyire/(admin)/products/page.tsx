@@ -41,7 +41,7 @@ export default function InventoryPage() {
     name: "", description: "", price: "", oldPrice: "", imageUrl: "", badgeLabel: "", category: "Perfumes", stock: "0", lowStockThreshold: "5", isAvailable: true
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [isBulkProcessingAction, setIsBulkProcessingAction] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
   
@@ -244,28 +244,28 @@ export default function InventoryPage() {
     }
   };
 
-  const handleBulkDelete = async () => {
-    console.log(`[Admin] Execution: Bulk Deleting IDs:`, selectedIds);
+  const handleBulkAction = async (action: 'DELETE' | 'PUBLISH' | 'HIDE') => {
+    console.log(`[Admin] Execution: Bulk ${action} for IDs:`, selectedIds);
     if (selectedIds.length === 0) return;
     
-    setIsBulkDeleting(true);
+    setIsBulkProcessingAction(true);
     try {
-      const res = await fetch('/api/admin/bulk-delete', {
+      const res = await fetch('/api/admin/bulk-update', {
         method: 'POST',
-        body: JSON.stringify({ ids: selectedIds })
+        body: JSON.stringify({ ids: selectedIds, action })
       });
       const data = await res.json();
       
-      if (!res.ok) throw new Error(data.error || "Bulk delete failed");
+      if (!res.ok) throw new Error(data.error || "Bulk action failed");
       
-      console.log(`[Admin] Successfully bulk deleted ${selectedIds.length} items`);
+      console.log(`[Admin] Successfully bulk ${action}ed ${selectedIds.length} items`);
       setSelectedIds([]);
       setIsBulkDeleteConfirmOpen(false);
       await fetchProducts();
     } catch (error: any) {
       alert(error.message);
     } finally {
-      setIsBulkDeleting(false);
+      setIsBulkProcessingAction(false);
     }
   };
 
@@ -290,15 +290,24 @@ export default function InventoryPage() {
           <h2 className="text-4xl md:text-6xl font-serif text-brand-plum dark:text-brand-rosegold italic mb-2 tracking-tight">Catalog</h2>
           <p className="text-gray-500 font-light text-lg">Manage your products and inventory</p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
           {selectedIds.length > 0 && (
-            <button 
-              onClick={() => setIsBulkDeleteConfirmOpen(true)}
-              className="px-8 py-4 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 border border-red-100 dark:bg-red-900/10 dark:border-red-900/20"
-            >
-              <TrashIcon className="w-4 h-4" /> 
-              Delete {selectedIds.length} Selection
-            </button>
+            <>
+              <button 
+                onClick={() => handleBulkAction('PUBLISH')}
+                disabled={isBulkProcessingAction}
+                className="px-8 py-4 bg-green-50 text-green-600 hover:bg-green-600 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 border border-green-100 dark:bg-green-900/10 dark:border-green-900/20"
+              >
+                🚀 {isBulkProcessingAction ? '...' : `Publish ${selectedIds.length} to Users`}
+              </button>
+              <button 
+                onClick={() => setIsBulkDeleteConfirmOpen(true)}
+                className="px-8 py-4 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 border border-red-100 dark:bg-red-900/10 dark:border-red-900/20"
+              >
+                <TrashIcon className="w-4 h-4" /> 
+                Delete Selection
+              </button>
+            </>
           )}
           <button 
             onClick={() => setIsBulkModalOpen(true)}
@@ -338,8 +347,8 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      {/* Product Grid Table */}
-      <div className="bg-white dark:bg-[#1E1E1E] rounded-[3rem] border border-gray-50 dark:border-gray-800 shadow-sm overflow-hidden">
+      {/* Product Grid Table (Desktop) */}
+      <div className="bg-white dark:bg-[#1E1E1E] rounded-[3rem] border border-gray-50 dark:border-gray-800 shadow-sm overflow-hidden hidden md:block">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
@@ -415,8 +424,54 @@ export default function InventoryPage() {
             </tbody>
           </table>
         </div>
-        
-        {filteredProducts.length === 0 && (
+      </div>
+
+      {/* Product Grid (Mobile Cards) */}
+      <div className="grid grid-cols-1 gap-6 md:hidden">
+        {filteredProducts.map(product => (
+          <div key={product.id} className={`p-6 bg-white dark:bg-[#1E1E1E] rounded-[2rem] border border-gray-100 dark:border-gray-800 shadow-sm space-y-4 ${selectedIds.includes(product.id) ? 'ring-2 ring-brand-plum' : ''}`}>
+            <div className="flex items-center justify-between">
+              <input 
+                type="checkbox" 
+                className="w-6 h-6 rounded border-gray-300 text-brand-plum focus:ring-brand-plum"
+                checked={selectedIds.includes(product.id)}
+                onChange={() => toggleSelect(product.id)}
+              />
+              <div className="flex gap-2">
+                <button onClick={() => handleOpenModal(product)} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-gray-500">
+                   <PencilSquareIcon className="w-5 h-5" />
+                </button>
+                <button onClick={() => setDeleteConfirmId(product.id)} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-red-500">
+                   <TrashIcon className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex gap-4">
+               <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 flex-shrink-0">
+                  <AppImage src={product.imageUrl} alt={product.name} fill />
+               </div>
+               <div className="flex-1 min-w-0">
+                  <h4 className="font-bold text-lg truncate">{product.name}</h4>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <span className="text-[8px] font-black text-brand-rosegold uppercase tracking-widest">{product.category}</span>
+                    <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${product.isAvailable ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                      {product.isAvailable ? 'Live' : 'Hidden'}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex items-end justify-between">
+                    <span className="font-serif text-xl italic text-brand-plum">GHC {product.price}</span>
+                    <span className={`text-xs font-black ${product.stock <= product.lowStockThreshold ? 'text-red-500' : 'text-gray-400'}`}>
+                      Stock: {product.stock}
+                    </span>
+                  </div>
+               </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {filteredProducts.length === 0 && (
           <div className="p-20 text-center space-y-4">
              <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-[2rem] flex items-center justify-center mx-auto text-gray-300">
                 <XMarkIcon className="w-10 h-10" />
@@ -428,9 +483,9 @@ export default function InventoryPage() {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 overflow-y-auto pt-20 pb-20">
+        <div className="fixed inset-0 z-[100] flex items-start justify-center px-4 overflow-y-auto py-10 md:py-20">
           <div className="fixed inset-0 bg-brand-plum/40 backdrop-blur-md transition-opacity" onClick={() => setIsModalOpen(false)} />
-          <div className="relative bg-white dark:bg-[#1E1E1E] w-full max-w-2xl rounded-[3rem] shadow-2xl p-10 md:p-14 space-y-10 animate-in zoom-in-95 duration-300">
+          <div className="relative bg-white dark:bg-[#1E1E1E] w-full max-w-2xl rounded-[3rem] shadow-2xl p-8 md:p-14 space-y-10 animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto custom-scrollbar my-auto">
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="text-3xl font-serif italic">{editingProduct ? 'Edit Item' : 'New Collection'}</h3>
@@ -687,11 +742,11 @@ export default function InventoryPage() {
             </div>
             <div className="flex flex-col gap-3">
               <button 
-                onClick={handleBulkDelete}
-                disabled={isBulkDeleting}
+                onClick={() => handleBulkAction('DELETE')}
+                disabled={isBulkProcessingAction}
                 className="w-full py-5 bg-red-600 text-white rounded-3xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-red-600/20 hover:scale-105 transition-all active:scale-95 disabled:opacity-50"
               >
-                {isBulkDeleting ? 'Processing...' : 'Yes, Delete Selection'}
+                {isBulkProcessingAction ? 'Processing...' : 'Yes, Delete Selection'}
               </button>
               <button 
                 onClick={() => setIsBulkDeleteConfirmOpen(false)}
