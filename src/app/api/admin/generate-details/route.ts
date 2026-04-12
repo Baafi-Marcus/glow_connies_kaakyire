@@ -74,7 +74,16 @@ export async function POST(req: Request) {
       if (!response.ok) {
         const errText = await response.text();
         console.error(`[AI] GitHub Provider Error: ${response.status} - ${errText}`);
-        throw new Error(`GitHub AI Error: ${response.statusText}`);
+        
+        let detailedError = response.statusText;
+        try {
+          const errJson = JSON.parse(errText);
+          detailedError = errJson.error?.message || errJson.message || detailedError;
+        } catch (e) {
+          detailedError = errText || detailedError;
+        }
+        
+        throw new Error(`GitHub AI Error (${response.status}): ${detailedError}`);
       }
 
       const result = await response.json();
