@@ -42,6 +42,8 @@ export default function InventoryPage() {
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
   
   // Bulk Upload State
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
@@ -224,50 +226,46 @@ export default function InventoryPage() {
   };
 
   const handleDelete = async (id: string) => {
-    console.log(`[Admin] Deletion triggered for ID: ${id}`);
-    if (window.confirm("Permanently remove this item from catalog?")) {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
-        const data = await res.json();
-        
-        if (!res.ok) {
-           throw new Error(data.error || "Delete failed");
-        }
-        
-        console.log(`[Admin] Successfully deleted product ${id}`);
-        await fetchProducts();
-      } catch (error: any) {
-        console.error("Delete UI Error:", error);
-        alert(`Failed to delete: ${error.message}`);
-        setLoading(false);
-      }
+    console.log(`[Admin] Execution: Deleting ID ${id}`);
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      
+      if (!res.ok) throw new Error(data.error || "Delete failed");
+      
+      console.log(`[Admin] Successfully deleted product ${id}`);
+      setDeleteConfirmId(null);
+      await fetchProducts();
+    } catch (error: any) {
+      console.error("Delete UI Error:", error);
+      alert(`Failed to delete: ${error.message}`);
+      setLoading(false);
     }
   };
 
   const handleBulkDelete = async () => {
-    console.log(`[Admin] Bulk deletion triggered for IDs:`, selectedIds);
+    console.log(`[Admin] Execution: Bulk Deleting IDs:`, selectedIds);
     if (selectedIds.length === 0) return;
     
-    if (window.confirm(`Are you sure you want to PERMANENTLY delete ${selectedIds.length} items? This cannot be undone.`)) {
-      setIsBulkDeleting(true);
-      try {
-        const res = await fetch('/api/admin/bulk-delete', {
-          method: 'POST',
-          body: JSON.stringify({ ids: selectedIds })
-        });
-        const data = await res.json();
-        
-        if (!res.ok) throw new Error(data.error || "Bulk delete failed");
-        
-        console.log(`[Admin] Successfully bulk deleted ${selectedIds.length} items`);
-        setSelectedIds([]);
-        await fetchProducts();
-      } catch (error: any) {
-        alert(error.message);
-      } finally {
-        setIsBulkDeleting(false);
-      }
+    setIsBulkDeleting(true);
+    try {
+      const res = await fetch('/api/admin/bulk-delete', {
+        method: 'POST',
+        body: JSON.stringify({ ids: selectedIds })
+      });
+      const data = await res.json();
+      
+      if (!res.ok) throw new Error(data.error || "Bulk delete failed");
+      
+      console.log(`[Admin] Successfully bulk deleted ${selectedIds.length} items`);
+      setSelectedIds([]);
+      setIsBulkDeleteConfirmOpen(false);
+      await fetchProducts();
+    } catch (error: any) {
+      alert(error.message);
+    } finally {
+      setIsBulkDeleting(false);
     }
   };
 
@@ -295,12 +293,11 @@ export default function InventoryPage() {
         <div className="flex gap-4">
           {selectedIds.length > 0 && (
             <button 
-              onClick={handleBulkDelete}
-              disabled={isBulkDeleting}
+              onClick={() => setIsBulkDeleteConfirmOpen(true)}
               className="px-8 py-4 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 border border-red-100 dark:bg-red-900/10 dark:border-red-900/20"
             >
               <TrashIcon className="w-4 h-4" /> 
-              {isBulkDeleting ? 'Deleting...' : `Delete ${selectedIds.length} Selection`}
+              Delete {selectedIds.length} Selection
             </button>
           )}
           <button 
@@ -408,7 +405,7 @@ export default function InventoryPage() {
                        <button onClick={() => handleOpenModal(product)} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-gray-500 hover:text-brand-plum dark:hover:text-brand-rosegold hover:shadow-md transition-all">
                          <PencilSquareIcon className="w-5 h-5" />
                        </button>
-                       <button onClick={() => handleDelete(product.id)} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-gray-500 hover:text-red-600 hover:shadow-md transition-all">
+                       <button onClick={() => setDeleteConfirmId(product.id)} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-gray-500 hover:text-red-600 hover:shadow-md transition-all">
                          <TrashIcon className="w-5 h-5" />
                        </button>
                     </div>
@@ -641,6 +638,67 @@ export default function InventoryPage() {
                    </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Deletion Modal (Single) */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center px-4">
+          <div className="fixed inset-0 bg-brand-plum/40 backdrop-blur-md" onClick={() => setDeleteConfirmId(null)} />
+          <div className="relative bg-white dark:bg-[#1E1E1E] w-full max-w-md rounded-[3rem] shadow-2xl p-10 text-center space-y-8 animate-in zoom-in-95 duration-300">
+            <div className="w-20 h-20 bg-red-50 dark:bg-red-900/20 rounded-[2rem] flex items-center justify-center mx-auto text-red-600">
+               <TrashIcon className="w-10 h-10" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-serif italic mb-2">Remove permanently?</h3>
+              <p className="text-gray-400 text-sm">This item will be deleted from your catalog forever.</p>
+            </div>
+            <div className="flex flex-col gap-3">
+              <button 
+                onClick={() => handleDelete(deleteConfirmId)}
+                className="w-full py-5 bg-red-600 text-white rounded-3xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-red-600/20 hover:scale-105 transition-all active:scale-95"
+              >
+                Yes, Delete Item
+              </button>
+              <button 
+                onClick={() => setDeleteConfirmId(null)}
+                className="w-full py-5 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-3xl font-black uppercase tracking-widest text-[10px] hover:bg-gray-200 transition-all"
+              >
+                No, Keep it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Deletion Modal (Bulk) */}
+      {isBulkDeleteConfirmOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center px-4">
+          <div className="fixed inset-0 bg-brand-plum/40 backdrop-blur-md" onClick={() => setIsBulkDeleteConfirmOpen(false)} />
+          <div className="relative bg-white dark:bg-[#1E1E1E] w-full max-w-md rounded-[3rem] shadow-2xl p-10 text-center space-y-8 animate-in zoom-in-95 duration-300">
+            <div className="w-20 h-20 bg-red-50 dark:bg-red-900/20 rounded-[2rem] flex items-center justify-center mx-auto text-red-600">
+               <TrashIcon className="w-10 h-10" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-serif italic mb-2">Delete {selectedIds.length} Items?</h3>
+              <p className="text-gray-400 text-sm">Batch deletion cannot be undone.</p>
+            </div>
+            <div className="flex flex-col gap-3">
+              <button 
+                onClick={handleBulkDelete}
+                disabled={isBulkDeleting}
+                className="w-full py-5 bg-red-600 text-white rounded-3xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-red-600/20 hover:scale-105 transition-all active:scale-95 disabled:opacity-50"
+              >
+                {isBulkDeleting ? 'Processing...' : 'Yes, Delete Selection'}
+              </button>
+              <button 
+                onClick={() => setIsBulkDeleteConfirmOpen(false)}
+                className="w-full py-5 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-3xl font-black uppercase tracking-widest text-[10px] hover:bg-gray-200 transition-all"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
