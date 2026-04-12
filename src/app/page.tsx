@@ -159,15 +159,29 @@ export default function Homepage() {
           
           <div className="grid grid-cols-1 gap-6">
             {[
-              { step: "01", title: "Select Your Signature", desc: "Discover premium perfumes, cosmetics, and accessories curated for you." },
-              { step: "02", title: "Verify via WhatsApp", desc: "Connect with us to finalize your order and delivery details with ease." },
-              { step: "03", title: "Receive Your Glow", desc: "Enjoy bespoke delivery across Ghana and elevate your daily lifestyle." }
+              { 
+                step: "01", 
+                title: "Discover Your Essentials", 
+                desc: "Browse our curated collection of luxury perfumes, stylish accessories, and premium beauty products selected just for you." 
+              },
+              { 
+                step: "02", 
+                title: "Confirm on WhatsApp", 
+                desc: "Send your order details to our team on WhatsApp to quickly finalize your preferences and delivery information." 
+              },
+              { 
+                step: "03", 
+                title: "Swift Nationwide Delivery", 
+                desc: "Relax as we bring your 'Glow' directly to your doorstep, with fast and reliable delivery available anywhere in Ghana." 
+              }
             ].map((item, idx) => (
-              <div key={idx} className="group flex gap-8 p-10 bg-white/5 border border-white/10 rounded-[2.5rem] hover:bg-white/10 hover:border-brand-rosegold/50 transition-all duration-500">
-                 <span className="text-4xl font-serif italic text-brand-rosegold/30 group-hover:text-brand-rosegold transition-colors">{item.step}</span>
-                 <div className="space-y-2">
-                    <h4 className="text-xl font-bold tracking-tight">{item.title}</h4>
-                    <p className="text-white/40 font-light leading-relaxed group-hover:text-white/60 transition-colors uppercase text-[10px] tracking-widest">{item.desc}</p>
+              <div key={idx} className="group flex gap-8 p-10 bg-white/5 border border-white/10 rounded-[2.5rem] hover:bg-white/10 hover:border-brand-rosegold/50 transition-all duration-500 shadow-2xl">
+                 <span className="text-4xl font-serif italic text-brand-rosegold/50 group-hover:text-brand-rosegold transition-colors">{item.step}</span>
+                 <div className="space-y-3">
+                    <h4 className="text-2xl font-bold tracking-tight">{item.title}</h4>
+                    <p className="text-white/80 font-normal leading-relaxed group-hover:text-white transition-colors text-sm">
+                      {item.desc}
+                    </p>
                  </div>
               </div>
             ))}
