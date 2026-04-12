@@ -57,7 +57,8 @@ function ProductsContent() {
           <h1 className="text-5xl md:text-8xl font-serif text-brand-plum dark:text-brand-rosegold mb-8 leading-[1.05] tracking-tight">
             {category === 'All' ? 'Everything' : category} <br />
             <span className="text-gray-300 dark:text-gray-700 italic font-medium">Beauty Tailored For You.</span>
-        </h1>
+          </h1>
+        </div>
         
         {category !== "All" && subCategories.length > 1 && (
           <div className="flex flex-wrap gap-3 mt-10 md:mt-16 overflow-x-auto pb-4 custom-scrollbar no-scrollbar">
