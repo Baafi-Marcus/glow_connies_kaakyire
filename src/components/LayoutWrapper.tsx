@@ -5,7 +5,7 @@ import { CartProvider } from '@/context/CartContext';
 import Navbar from '@/components/Navbar';
 import NavDrawer from '@/components/NavDrawer';
 import CartDrawer from '@/components/CartDrawer';
-import SearchDrawer from '@/components/SearchDrawer';
+import SearchDropdown from '@/components/SearchDropdown';
 import Footer from '@/components/Footer';
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
@@ -19,7 +19,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
           <Navbar />
           <NavDrawer />
           <CartDrawer />
-          <SearchDrawer />
+          <SearchDropdown />
         </>
       )}
       

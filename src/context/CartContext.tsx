@@ -28,6 +28,8 @@ type CartContextType = {
   setIsMenuOpen: (open: boolean) => void;
   isSearchOpen: boolean;
   setIsSearchOpen: (open: boolean) => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -37,6 +39,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const addToCart = (product: Product) => {
     setCart((prev) => {
@@ -70,7 +73,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       isMenuOpen,
       setIsMenuOpen,
       isSearchOpen,
-      setIsSearchOpen
+      setIsSearchOpen,
+      searchQuery,
+      setSearchQuery
     }}>
       {children}
     </CartContext.Provider>
