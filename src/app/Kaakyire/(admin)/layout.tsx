@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import AdminLayoutWrapper from "@/components/admin/AdminLayoutWrapper";
 
 export default async function AdminLayout({
   children,
@@ -15,11 +16,8 @@ export default async function AdminLayout({
   // We want to migrate to this layout-level check.
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50/50 dark:bg-black/20">
-      <AdminSidebar />
-      <main className="flex-1 p-6 md:p-12 overflow-x-hidden">
-        {children}
-      </main>
-    </div>
+    <AdminLayoutWrapper>
+      {children}
+    </AdminLayoutWrapper>
   );
 }

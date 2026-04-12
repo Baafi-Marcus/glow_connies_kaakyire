@@ -11,7 +11,12 @@ import {
 } from "@heroicons/react/24/outline";
 import GlowLogo from "@/components/GlowLogo";
 
-export default function AdminSidebar() {
+interface AdminSidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
 
   const navItems = [
@@ -27,7 +32,15 @@ export default function AdminSidebar() {
   };
 
   return (
-    <aside className="w-full md:w-72 bg-white dark:bg-[#1E1E1E] border-r border-gray-100 dark:border-gray-800 flex flex-col h-screen sticky top-0">
+    <>
+      {/* Mobile Overlay */}
+      <div 
+        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-[50] md:hidden transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
+        onClick={onClose}
+      />
+      
+      {/* Sidebar */}
+      <aside className={`fixed md:sticky top-0 left-0 z-[60] h-screen w-72 bg-white dark:bg-[#1E1E1E] border-r border-gray-100 dark:border-gray-800 flex flex-col transition-transform duration-300 ease-out md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="p-8">
         <Link href="/" className="flex flex-col gap-1 group" onClick={() => {}}>
           <GlowLogo size="lg" />
@@ -43,6 +56,7 @@ export default function AdminSidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className={`flex items-center gap-3 px-4 py-4 rounded-2xl transition-all duration-300 group ${
                 isActive 
                   ? 'bg-brand-plum text-white shadow-xl shadow-brand-plum/20 translate-x-1' 
@@ -65,6 +79,7 @@ export default function AdminSidebar() {
           <span className="font-bold tracking-tight">System Logout</span>
         </button>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }
