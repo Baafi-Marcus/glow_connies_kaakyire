@@ -26,17 +26,24 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const body = await req.json();
-  const { geminiKey, cloudinaryUrl, whatsappNumber } = body;
+  try {
+    const body = await req.json();
+    
+    // Construct the update data object only with provided fields
+    const data: any = {};
+    if (body.geminiKey !== undefined) data.geminiKey = body.geminiKey;
+    if (body.cloudinaryUrl !== undefined) data.cloudinaryUrl = body.cloudinaryUrl;
+    if (body.whatsappNumber !== undefined) data.whatsappNumber = body.whatsappNumber;
 
-  const settings = await prisma.storeSettings.update({
-    where: { id: 'singleton' },
-    data: {
-      geminiKey,
-      cloudinaryUrl,
-      whatsappNumber,
-    },
-  });
+    const settings = await prisma.storeSettings.update({
+      where: { id: 'singleton' },
+      data
+    });
 
-  return NextResponse.json(settings);
+    console.log(`[API] Settings partial update success for fields: ${Object.keys(data).join(', ')}`);
+    return NextResponse.json(settings);
+  } catch (error: any) {
+    console.error('[API] Settings Update Error:', error.message || error);
+    return NextResponse.json({ error: 'Update failed' }, { status: 500 });
+  }
 }

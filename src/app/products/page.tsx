@@ -5,11 +5,13 @@ import { useSearchParams } from "next/navigation";
 import AppImage from "@/components/AppImage";
 import { useCart, Product } from "@/context/CartContext";
 import { FunnelIcon, ShoppingBagIcon, PlusIcon } from "@heroicons/react/24/outline";
+import ProductDetailModal from "@/components/ProductDetailModal";
 
 function ProductsContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const searchParams = useSearchParams();
   const category = searchParams.get('category') || 'All';
 
@@ -64,7 +66,7 @@ function ProductsContent() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12">
           {Array.isArray(products) && products.map(product => (
-            <div key={product.id} className="group bg-white dark:bg-[#1E1E1E] rounded-[3rem] overflow-hidden shadow-sm hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.4)] transition-all duration-700 border border-gray-100 dark:border-gray-800 flex flex-col">
+            <div key={product.id} onClick={() => setSelectedProduct(product)} className="group bg-white dark:bg-[#1E1E1E] rounded-[3rem] overflow-hidden shadow-sm hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.4)] transition-all duration-700 border border-gray-100 dark:border-gray-800 flex flex-col cursor-pointer">
               <div className="relative h-[22rem] bg-gray-50 dark:bg-gray-900 w-full overflow-hidden">
                 <AppImage 
                   src={product.imageUrl} 
@@ -100,7 +102,10 @@ function ProductsContent() {
                   </div>
                   <button 
                     className="inline-flex items-center justify-center h-16 w-16 rounded-[1.5rem] bg-brand-plum dark:bg-brand-rosegold text-white dark:text-black hover:rotate-90 hover:scale-110 transition-all duration-500 shadow-2xl active:scale-90" 
-                    onClick={() => addToCart(product)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addToCart(product);
+                    }}
                     title="Add to Bag"
                   >
                     <PlusIcon className="w-10 h-10" />
@@ -118,6 +123,11 @@ function ProductsContent() {
           )}
         </div>
       )}
+
+      <ProductDetailModal 
+        product={selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+      />
     </div>
   );
 }

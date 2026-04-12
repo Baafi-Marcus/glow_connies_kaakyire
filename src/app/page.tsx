@@ -18,9 +18,11 @@ import {
 } from "@heroicons/react/24/outline";
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import GlowLogo from "@/components/GlowLogo";
+import ProductDetailModal from "@/components/ProductDetailModal";
 
 export default function Homepage() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     fetch('/api/products')
@@ -188,7 +190,7 @@ export default function Homepage() {
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-10">
             {featuredProducts.map(product => (
-              <Link key={product.id} href="/products" className="group space-y-6">
+              <div key={product.id} onClick={() => setSelectedProduct(product)} className="group space-y-6 cursor-pointer">
                 <div className="relative h-64 md:h-80 rounded-[2rem] overflow-hidden bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800/20">
                   <AppImage src={product.imageUrl} alt={product.name} fill className="group-hover:scale-110 transition-transform duration-1000" />
                   
@@ -266,6 +268,10 @@ export default function Homepage() {
         </div>
       </section>
 
+      <ProductDetailModal 
+        product={selectedProduct} 
+        onClose={() => setSelectedProduct(null)} 
+      />
     </div>
   );
 }

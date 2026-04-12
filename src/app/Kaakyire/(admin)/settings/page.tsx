@@ -6,18 +6,19 @@ import {
   CloudIcon, 
   ChatBubbleLeftRightIcon,
   CheckCircleIcon,
-  ExclamationCircleIcon
+  ExclamationCircleIcon,
+  ArrowPathIcon
 } from "@heroicons/react/24/outline";
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState({
     geminiKey: "",
     cloudinaryUrl: "",
-    whatsappNumber: "233246702043"
+    whatsappNumber: ""
   });
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [savingSection, setSavingSection] = useState<string | null>(null);
+  const [status, setStatus] = useState<{ section: string, type: 'success' | 'error', msg: string } | null>(null);
 
   useEffect(() => {
     fetch('/api/admin/settings')
@@ -28,76 +29,112 @@ export default function SettingsPage() {
           cloudinaryUrl: data.cloudinaryUrl || "",
           whatsappNumber: data.whatsappNumber || "233246702043"
         });
-        setLoading(false);
+        setIsLoading(false);
+      })
+      .catch(err => {
+         console.error("Failed to load settings", err);
+         setIsLoading(false);
       });
   }, []);
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
+  const handleSaveSection = async (section: string, payload: any) => {
+    setSavingSection(section);
     setStatus(null);
     
-    const res = await fetch('/api/admin/settings', {
-      method: 'POST',
-      body: JSON.stringify(settings)
-    });
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
 
-    if (res.ok) {
-      setStatus({ type: 'success', msg: 'System configurations updated successfully.' });
-    } else {
-      setStatus({ type: 'error', msg: 'Failed to update configurations.' });
+      if (res.ok) {
+        setStatus({ section, type: 'success', msg: 'Updated successfully.' });
+      } else {
+        throw new Error("Update failed");
+      }
+    } catch (error) {
+      setStatus({ section, type: 'error', msg: 'Failed to update.' });
+    } finally {
+      setSavingSection(null);
     }
-    setSaving(false);
   };
 
-  if (loading) return <div className="p-20 text-center animate-pulse">Loading Global Configurations...</div>;
+  if (isLoading) return (
+    <div className="flex flex-col items-center justify-center p-40 space-y-4">
+      <ArrowPathIcon className="w-12 h-12 text-brand-rosegold animate-spin" />
+      <p className="font-serif italic text-gray-400">Loading Secure Configurations...</p>
+    </div>
+  );
 
   return (
     <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div>
-        <h2 className="text-4xl md:text-6xl font-serif text-brand-plum dark:text-brand-rosegold italic mb-2 tracking-tight">System Settings</h2>
-        <p className="text-gray-500 font-light text-lg">Manage your AI intelligence and cloud storage keys</p>
+      <div className="flex justify-between items-end">
+        <div>
+          <h2 className="text-4xl md:text-6xl font-serif text-brand-plum dark:text-brand-rosegold italic mb-2 tracking-tight">System Settings</h2>
+          <p className="text-gray-500 font-light text-lg">Manage each configuration segment independently</p>
+        </div>
+        <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-900/10 rounded-full text-[10px] font-black uppercase text-green-600 tracking-widest border border-green-100 dark:border-green-900/20">
+           <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+           Keys Synchronized
+        </div>
       </div>
 
-      {status && (
-        <div className={`p-6 rounded-3xl flex items-center gap-4 animate-in zoom-in-95 duration-300 ${status.type === 'success' ? 'bg-green-50 text-green-700 dark:bg-green-900/10' : 'bg-red-50 text-red-700 dark:bg-red-900/10'}`}>
-          {status.type === 'success' ? <CheckCircleIcon className="w-6 h-6" /> : <ExclamationCircleIcon className="w-6 h-6" />}
-          <span className="font-bold tracking-tight">{status.msg}</span>
-        </div>
-      )}
-
-      <form onSubmit={handleSave} className="grid grid-cols-1 gap-8">
+      <div className="grid grid-cols-1 gap-8">
         {/* Gemini Key */}
-        <div className="bg-white dark:bg-[#1E1E1E] p-10 rounded-[3rem] border border-gray-50 dark:border-gray-800 shadow-sm space-y-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 rounded-2xl bg-brand-plum/5 dark:bg-brand-rosegold/5">
-              <KeyIcon className="w-6 h-6 text-brand-plum dark:text-brand-rosegold" />
+        <div className="bg-white dark:bg-[#1E1E1E] p-10 rounded-[3rem] border border-gray-50 dark:border-gray-800 shadow-sm space-y-8 relative overflow-hidden group">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-2xl bg-brand-plum/5 dark:bg-brand-rosegold/5">
+                <KeyIcon className="w-6 h-6 text-brand-plum dark:text-brand-rosegold" />
+              </div>
+              <h3 className="text-xl font-serif italic">AI Intelligence (Keys)</h3>
             </div>
-            <h3 className="text-xl font-serif italic">AI Intelligence (Gemini)</h3>
+            {status?.section === 'ai' && (
+              <span className={`text-[10px] font-black uppercase tracking-widest ${status.type === 'success' ? 'text-green-600' : 'text-red-500'}`}>
+                {status.msg}
+              </span>
+            )}
           </div>
+          
           <div className="space-y-4">
-            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Generative AI API Keys (Comma-Separated)</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">API Keys (Google AI Studio / GitHub Models)</label>
             <textarea 
-              placeholder="key1, key2, key3..."
+              placeholder="Paste your keys here, separated by commas..."
               rows={3}
               className="w-full px-6 py-5 rounded-2xl bg-gray-50 dark:bg-gray-800 border-none outline-none ring-2 ring-transparent focus:ring-brand-rosegold/20 transition-all font-mono text-sm resize-none"
               value={settings.geminiKey}
               onChange={e => setSettings({...settings, geminiKey: e.target.value})}
             />
-            <p className="text-[10px] text-gray-400 leading-relaxed">Required for the automated &quot;AI Suggest&quot;. You can use either **Google Gemini Keys** (starting with AIza) or **GitHub Models Tokens** (starting with ghp_). Multiple keys can be separated by commas (,) to cycle through them and prevent rate limits!</p>
+            <p className="text-[10px] text-gray-400 leading-relaxed italic">Supports AIza... (Gemini) and ghp_... (GitHub). Cycle multiple keys with commas.</p>
           </div>
+
+          <button 
+            onClick={() => handleSaveSection('ai', { geminiKey: settings.geminiKey })}
+            disabled={savingSection !== null}
+            className="w-full py-5 bg-brand-plum text-white dark:bg-brand-rosegold dark:text-black rounded-2xl font-black uppercase tracking-widest text-[10px] hover:scale-[1.02] transition-all active:scale-95 disabled:opacity-50"
+          >
+            {savingSection === 'ai' ? 'Updating AI Gateways...' : 'Save AI Configuration'}
+          </button>
         </div>
 
         {/* Cloudinary Key */}
-        <div className="bg-white dark:bg-[#1E1E1E] p-10 rounded-[3rem] border border-gray-50 dark:border-gray-800 shadow-sm space-y-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 rounded-2xl bg-brand-plum/5 dark:bg-brand-rosegold/5">
-              <CloudIcon className="w-6 h-6 text-brand-plum dark:text-brand-rosegold" />
+        <div className="bg-white dark:bg-[#1E1E1E] p-10 rounded-[3rem] border border-gray-50 dark:border-gray-800 shadow-sm space-y-8 relative overflow-hidden group">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-2xl bg-brand-plum/5 dark:bg-brand-rosegold/5">
+                <CloudIcon className="w-6 h-6 text-brand-plum dark:text-brand-rosegold" />
+              </div>
+              <h3 className="text-xl font-serif italic">Cloud Storage</h3>
             </div>
-            <h3 className="text-xl font-serif italic">Cloud Storage (Cloudinary)</h3>
+            {status?.section === 'cloud' && (
+              <span className={`text-[10px] font-black uppercase tracking-widest ${status.type === 'success' ? 'text-green-600' : 'text-red-500'}`}>
+                {status.msg}
+              </span>
+            )}
           </div>
+
           <div className="space-y-4">
-            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Cloudinary Connection URL</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Connection URL</label>
             <input 
               type="text" 
               placeholder="cloudinary://api_key:api_secret@cloud_name"
@@ -105,37 +142,52 @@ export default function SettingsPage() {
               value={settings.cloudinaryUrl}
               onChange={e => setSettings({...settings, cloudinaryUrl: e.target.value})}
             />
-            <p className="text-[10px] text-gray-400 leading-relaxed">Used to host your device-uploaded pictures permanently in the cloud.</p>
           </div>
+
+          <button 
+            onClick={() => handleSaveSection('cloud', { cloudinaryUrl: settings.cloudinaryUrl })}
+            disabled={savingSection !== null}
+            className="w-full py-5 bg-whatsapp/10 text-whatsapp rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-whatsapp hover:text-white transition-all active:scale-95 disabled:opacity-50 border border-whatsapp/20"
+          >
+            {savingSection === 'cloud' ? 'Syncing Cloud...' : 'Save Storage URL'}
+          </button>
         </div>
 
         {/* WhatsApp Config */}
-        <div className="bg-white dark:bg-[#1E1E1E] p-10 rounded-[3rem] border border-gray-50 dark:border-gray-800 shadow-sm space-y-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 rounded-2xl bg-brand-plum/5 dark:bg-brand-rosegold/5">
-              <ChatBubbleLeftRightIcon className="w-6 h-6 text-brand-plum dark:text-brand-rosegold" />
+        <div className="bg-white dark:bg-[#1E1E1E] p-10 rounded-[3rem] border border-gray-50 dark:border-gray-800 shadow-sm space-y-8 relative overflow-hidden group">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-2xl bg-brand-plum/5 dark:bg-brand-rosegold/5">
+                <ChatBubbleLeftRightIcon className="w-6 h-6 text-brand-plum dark:text-brand-rosegold" />
+              </div>
+              <h3 className="text-xl font-serif italic">Sales Channel</h3>
             </div>
-            <h3 className="text-xl font-serif italic">Store Communication</h3>
+            {status?.section === 'whatsapp' && (
+              <span className={`text-[10px] font-black uppercase tracking-widest ${status.type === 'success' ? 'text-green-600' : 'text-red-500'}`}>
+                {status.msg}
+              </span>
+            )}
           </div>
+
           <div className="space-y-4">
-            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">WhatsApp Business Number</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Business Phone Number</label>
             <input 
               type="text" 
-              className="w-full px-6 py-5 rounded-2xl bg-gray-50 dark:bg-gray-800 border-none outline-none ring-2 ring-transparent focus:ring-brand-rosegold/20 transition-all"
+              className="w-full px-6 py-5 rounded-2xl bg-gray-50 dark:bg-gray-800 border-none outline-none ring-2 ring-transparent focus:ring-brand-rosegold/20 transition-all text-lg font-bold"
               value={settings.whatsappNumber}
               onChange={e => setSettings({...settings, whatsappNumber: e.target.value})}
             />
           </div>
-        </div>
 
-        <button 
-          type="submit" 
-          disabled={saving}
-          className="w-full bg-brand-plum text-white dark:bg-brand-rosegold dark:text-black font-black uppercase tracking-widest text-sm py-8 rounded-[2.5rem] shadow-2xl hover:-translate-y-1 transition-all disabled:opacity-50 disabled:translate-y-0"
-        >
-          {saving ? 'Encrypting & Saving...' : 'Commit System Changes'}
-        </button>
-      </form>
+          <button 
+            onClick={() => handleSaveSection('whatsapp', { whatsappNumber: settings.whatsappNumber })}
+            disabled={savingSection !== null}
+            className="w-full py-5 bg-whatsapp text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:scale-105 transition-all active:scale-95 disabled:opacity-50 shadow-xl shadow-whatsapp/20"
+          >
+            {savingSection === 'whatsapp' ? 'Configuring Channel...' : 'Save WhatsApp Number'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
