@@ -224,7 +224,8 @@ export default function InventoryPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Permanently remove this item from catalog?")) {
+    console.log(`[Admin] Deletion triggered for ID: ${id}`);
+    if (window.confirm("Permanently remove this item from catalog?")) {
       setLoading(true);
       try {
         const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
@@ -234,6 +235,7 @@ export default function InventoryPage() {
            throw new Error(data.error || "Delete failed");
         }
         
+        console.log(`[Admin] Successfully deleted product ${id}`);
         await fetchProducts();
       } catch (error: any) {
         console.error("Delete UI Error:", error);
@@ -244,9 +246,10 @@ export default function InventoryPage() {
   };
 
   const handleBulkDelete = async () => {
+    console.log(`[Admin] Bulk deletion triggered for IDs:`, selectedIds);
     if (selectedIds.length === 0) return;
     
-    if (confirm(`Are you sure you want to PERMANENTLY delete ${selectedIds.length} items? This cannot be undone.`)) {
+    if (window.confirm(`Are you sure you want to PERMANENTLY delete ${selectedIds.length} items? This cannot be undone.`)) {
       setIsBulkDeleting(true);
       try {
         const res = await fetch('/api/admin/bulk-delete', {
@@ -257,6 +260,7 @@ export default function InventoryPage() {
         
         if (!res.ok) throw new Error(data.error || "Bulk delete failed");
         
+        console.log(`[Admin] Successfully bulk deleted ${selectedIds.length} items`);
         setSelectedIds([]);
         await fetchProducts();
       } catch (error: any) {

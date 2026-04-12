@@ -44,7 +44,7 @@ export async function POST(req: Request) {
 
     // PROVIDER 1: GitHub Models (ghp_ keys)
     if (activeKey.startsWith('ghp_') || activeKey.startsWith('github_')) {
-      console.log("[AI] Using GitHub Models Provider");
+      console.log(`[AI] Using GitHub Models Provider for image: ${imageUrl.substring(0, 50)}...`);
       const response = await fetch("https://models.inference.ai.azure.com/chat/completions", {
         method: "POST",
         headers: {
@@ -72,18 +72,23 @@ export async function POST(req: Request) {
       });
 
       if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(`GitHub AI Error: ${errData.error?.message || response.statusText}`);
+        const errText = await response.text();
+        console.error(`[AI] GitHub Provider Error: ${response.status} - ${errText}`);
+        throw new Error(`GitHub AI Error: ${response.statusText}`);
       }
 
       const result = await response.json();
       const text = result.choices[0].message.content;
-      data = JSON.parse(text);
+      console.log(`[AI] GitHub Response: ${text.substring(0, 100)}...`);
+      
+      // Extract JSON from potential Markdown blocks (robust parsing)
+      const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      data = JSON.parse(jsonStr);
 
     } 
     // PROVIDER 2: Google Gemini (AIza keys)
     else {
-      console.log("[AI] Using Google Gemini Provider");
+      console.log(`[AI] Using Google Gemini Provider for image: ${imageUrl.substring(0, 50)}...`);
       const genAI = new GoogleGenerativeAI(activeKey);
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -98,14 +103,17 @@ export async function POST(req: Request) {
       ]);
 
       const text = result.response.text();
+      console.log(`[AI] Google Response: ${text.substring(0, 100)}...`);
+
+      // Extract JSON from potential Markdown blocks
       const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
       data = JSON.parse(jsonStr);
     }
 
     return NextResponse.json(data);
-  } catch (error: unknown) {
-    console.error('AI Generation Error:', error);
-    const msg = error instanceof Error ? error.message : "Unknown error";
+  } catch (error: any) {
+    console.error('[AI] Generation Final Catch Error:', error.message || error);
+    const msg = error.message || "Unknown error";
     return NextResponse.json({ error: 'AI generation failed: ' + msg }, { status: 500 });
   }
 }
