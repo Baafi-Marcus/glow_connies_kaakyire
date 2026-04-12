@@ -8,8 +8,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  let action = 'PROCESS';
   try {
-    const { ids, action } = await req.json();
+    const body = await req.json();
+    const ids = body.ids;
+    action = body.action;
     
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return NextResponse.json({ error: 'No IDs provided' }, { status: 400 });
