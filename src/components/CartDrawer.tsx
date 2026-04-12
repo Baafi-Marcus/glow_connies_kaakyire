@@ -20,14 +20,27 @@ export default function CartDrawer() {
   // Customer details
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [region, setRegion] = useState("Greater Accra");
   const [location, setLocation] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedOrder, setSubmittedOrder] = useState<Order | null>(null);
 
+  const GH_REGIONS = [
+    "Greater Accra", "Ashanti", "Central", "Eastern", "Western", 
+    "Western North", "Volta", "Oti", "Northern", "Savannah", 
+    "North East", "Upper East", "Upper West", "Bono", "Bono East", "Ahafo"
+  ];
+
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const orderData = { customerName: name, customerPhone: phone, location, items: cart, totalAmount: cartTotal };
+    const orderData = { 
+      customerName: name, 
+      customerPhone: phone, 
+      location: `${region} | ${location}`, 
+      items: cart, 
+      totalAmount: cartTotal 
+    };
     try {
       const res = await fetch('/api/orders', { method: 'POST', body: JSON.stringify(orderData) });
       const order = await res.json();
@@ -171,8 +184,21 @@ export default function CartDrawer() {
                     <input required type="tel" className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800" value={phone} onChange={e => setPhone(e.target.value)} placeholder="024 XXX XXXX" />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold uppercase text-gray-400 mb-1 leading-none">Delivery Location</label>
-                    <textarea required className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800" value={location} onChange={e => setLocation(e.target.value)} placeholder="East Legon, near the mall..." rows={3} />
+                    <label className="block text-xs font-bold uppercase text-gray-400 mb-1 leading-none">Region</label>
+                    <select 
+                      required 
+                      className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 appearance-none cursor-pointer" 
+                      value={region} 
+                      onChange={e => setRegion(e.target.value)}
+                    >
+                      {GH_REGIONS.map(r => (
+                        <option key={r} value={r}>{r}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-gray-400 mb-1 leading-none">Delivery Location / House Address</label>
+                    <textarea required className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800" value={location} onChange={e => setLocation(e.target.value)} placeholder="House No, Landmark, Street name..." rows={3} />
                   </div>
                 </form>
               )}
