@@ -22,8 +22,9 @@ type Product = {
   oldPrice: number | null;
   imageUrl: string | null; 
   badgeLabel: string | null;
-  category: string; 
   isAvailable: boolean;
+  category: string; 
+  subCategory: string | null;
   stock: number;
   lowStockThreshold: number;
 };
@@ -33,12 +34,13 @@ export default function InventoryPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
+  const [activeTab, setActiveTab] = useState<"LIVE" | "HIDDEN">("LIVE");
   
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({
-    name: "", description: "", price: "", oldPrice: "", imageUrl: "", badgeLabel: "", category: "Perfumes", stock: "0", lowStockThreshold: "5", isAvailable: true
+    name: "", description: "", price: "", oldPrice: "", imageUrl: "", badgeLabel: "", category: "Perfumes", subCategory: "", stock: "0", lowStockThreshold: "5", isAvailable: true
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkProcessingAction, setIsBulkProcessingAction] = useState(false);
@@ -108,6 +110,7 @@ export default function InventoryPage() {
             price: aiData.price || 0,
             imageUrl: uploadData.url,
             category: bulkCategory,
+            subCategory: aiData.subCategory || "",
             stock: "0",
             lowStockThreshold: "5",
             isAvailable: publishImmediately // Use new flag
@@ -163,11 +166,15 @@ export default function InventoryPage() {
       });
       const data = await res.json();
       if (!data.error) {
+        if (data.duplicateWarning) {
+          alert(data.duplicateWarning);
+        }
         setFormData(prev => ({
           ...prev,
           name: data.name || prev.name,
           description: data.description || prev.description,
           category: data.category || prev.category,
+          subCategory: data.subCategory || prev.subCategory,
           price: data.price?.toString() || prev.price
         }));
       }
@@ -184,7 +191,8 @@ export default function InventoryPage() {
     const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || 
                           p.description.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = categoryFilter === "All" || p.category === categoryFilter;
-    return matchesSearch && matchesCategory;
+    const matchesTab = activeTab === "LIVE" ? p.isAvailable : !p.isAvailable;
+    return matchesSearch && matchesCategory && matchesTab;
   });
 
   const handleOpenModal = (product: Product | null = null) => {
@@ -198,6 +206,7 @@ export default function InventoryPage() {
         imageUrl: product.imageUrl || "",
         badgeLabel: product.badgeLabel || "",
         category: product.category,
+        subCategory: product.subCategory || "",
         stock: product.stock.toString(),
         lowStockThreshold: product.lowStockThreshold.toString(),
         isAvailable: product.isAvailable
@@ -205,7 +214,7 @@ export default function InventoryPage() {
     } else {
       setEditingProduct(null);
       setFormData({
-        name: "", description: "", price: "", oldPrice: "", imageUrl: "", badgeLabel: "", category: "Perfumes", stock: "0", lowStockThreshold: "5", isAvailable: true
+        name: "", description: "", price: "", oldPrice: "", imageUrl: "", badgeLabel: "", category: "Perfumes", subCategory: "", stock: "0", lowStockThreshold: "5", isAvailable: true
       });
     }
     setIsModalOpen(true);
@@ -324,6 +333,26 @@ export default function InventoryPage() {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-8 border-b border-gray-100 dark:border-gray-800 pb-2 overflow-x-auto">
+        {[
+          { id: "LIVE", label: "Live Storefront", color: "text-green-600", count: products.filter(p => p.isAvailable).length },
+          { id: "HIDDEN", label: "Drafts / Hidden", color: "text-gray-400", count: products.filter(p => !p.isAvailable).length }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`flex items-center gap-3 pb-4 px-2 transition-all relative ${activeTab === tab.id ? 'opacity-100' : 'opacity-40 hover:opacity-100'}`}
+          >
+            <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${tab.color}`}>{tab.label}</span>
+            <span className="text-[10px] font-black px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full">{tab.count}</span>
+            {activeTab === tab.id && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-plum dark:bg-brand-rosegold" />
+            )}
+          </button>
+        ))}
+      </div>
+
       <div className="flex flex-col md:flex-row gap-6">
         <div className="flex-1 relative">
           <MagnifyingGlassIcon className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -387,8 +416,13 @@ export default function InventoryPage() {
                         <h4 className="font-bold text-lg leading-tight">{product.name}</h4>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-[10px] font-black text-brand-rosegold uppercase tracking-widest">{product.category}</span>
+                          {product.subCategory && (
+                             <>
+                               <span className="text-gray-300">/</span>
+                               <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{product.subCategory}</span>
+                             </>
+                          )}
                           {product.badgeLabel && <span className="text-[8px] bg-brand-plum text-white px-2 py-0.5 rounded-full font-black uppercase tracking-widest">{product.badgeLabel}</span>}
-                          {!product.isAvailable && <span className="text-[8px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-black uppercase tracking-widest">Hidden</span>}
                         </div>
                       </div>
                     </div>
@@ -526,6 +560,11 @@ export default function InventoryPage() {
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Category Tag</label>
                 <input className="w-full px-6 py-4 rounded-2xl bg-gray-50 dark:bg-gray-800 border-none outline-none" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Sub-Category</label>
+                <input className="w-full px-6 py-4 rounded-2xl bg-gray-50 dark:bg-gray-800 border-none outline-none" placeholder="e.g. Oud, Bags, Floral" value={formData.subCategory} onChange={e => setFormData({...formData, subCategory: e.target.value})} />
               </div>
 
               <div className="space-y-2">

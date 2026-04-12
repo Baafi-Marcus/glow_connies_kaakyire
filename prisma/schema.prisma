@@ -17,6 +17,7 @@ model Product {
   badgeLabel  String?
   isAvailable Boolean  @default(true)
   category    String   @default("General")
+  subCategory String?
   stock       Int      @default(0)
   lowStockThreshold Int @default(5)
   createdAt   DateTime @default(now())

@@ -22,6 +22,12 @@ export async function POST(req: Request) {
   try {
     const keys = settings.geminiKey.split(',').map(k => k.trim()).filter(k => k.length > 0);
     
+    // 0. CHECK FOR DUPLICATES
+    const existingProduct = await prisma.product.findFirst({
+        where: { imageUrl: imageUrl },
+        select: { name: true }
+    });
+
     // 1. Fetch the image ONCE to use across all retry attempts
     const imageResp = await fetch(imageUrl);
     const buffer = await imageResp.arrayBuffer();
@@ -32,6 +38,7 @@ export async function POST(req: Request) {
     Return a JSON object with:
     - name: A catchy, premium product name.
     - category: One of [Perfumes, Accessories, Beauty].
+    - subCategory: A more specific sub-category (e.g. for Perfumes: "Oud", "Floral", "Intense"; for Accessories: "Bags", "Watches", "Wallets"; for Beauty: "Lipstick", "Skincare").
     - description: A persuasive, premium, 2-3 sentence description emphasizing elegance and quality.
     - price: A suggested retail price in Ghana Cedis (GHC) between 100 and 5000 based on the item type.
     
@@ -89,10 +96,16 @@ export async function POST(req: Request) {
                 text = result.response.text();
             }
 
-            // SUCCESS: Parse and Return
+            // SUCCESS: Parse 
             console.log(`[AI] Success on attempt ${i + 1}`);
             const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
             const data = JSON.parse(jsonStr);
+
+            // Add duplicate warning if exists
+            if (existingProduct) {
+                data.duplicateWarning = `⚠️ WARNING: This image is already being used by "${existingProduct.name}". Please ensure you are not uploading a duplicate product.`;
+            }
+
             return NextResponse.json(data);
 
         } catch (error: any) {
@@ -111,4 +124,5 @@ export async function POST(req: Request) {
         error: 'AI generation failed after trying all keys: ' + (error.message || "Unknown error") 
     }, { status: 500 });
   }
+}
 }
