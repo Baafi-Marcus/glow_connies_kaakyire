@@ -11,6 +11,7 @@ export type Product = {
   imageUrl: string | null;
   badgeLabel?: string | null;
   category: string;
+  subCategory?: string | null;
 };
 
 export type CartItem = Product & { quantity: number };
