@@ -165,12 +165,12 @@ function ProductsContent() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-10 gap-y-20">
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 md:gap-x-10 gap-y-12 md:gap-y-20">
           {Array.isArray(sortedProducts) && sortedProducts.map(product => {
             const { rating, reviews } = getProductRating(product.id);
             return (
               <div key={product.id} onClick={() => setSelectedProduct(product)} className="group flex flex-col cursor-pointer animate-in fade-in zoom-in-95 duration-700">
-                <div className="relative h-[26rem] bg-gray-50 dark:bg-[#121212] w-full rounded-[2.5rem] overflow-hidden border border-gray-50 dark:border-gray-900 shadow-sm group-hover:shadow-2xl transition-all duration-700 group-hover:-translate-y-2">
+                <div className="relative h-[16rem] md:h-[26rem] bg-gray-50 dark:bg-[#121212] w-full rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden border border-gray-50 dark:border-gray-900 shadow-sm group-hover:shadow-2xl transition-all duration-700 group-hover:-translate-y-2">
                   <AppImage 
                     src={product.imageUrl} 
                     alt={product.name} 
@@ -179,21 +179,21 @@ function ProductsContent() {
                   />
                   
                   {/* Luxury Badges */}
-                  <div className="absolute top-6 left-6 flex flex-col gap-2 z-20">
+                  <div className="absolute top-4 md:top-6 left-4 md:left-6 flex flex-col gap-2 z-20">
                     {product.badgeLabel && (
-                      <div className="bg-brand-plum text-white px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-[.2em] shadow-xl">
+                      <div className="bg-brand-plum text-white px-3 md:px-5 py-1.5 md:py-2 rounded-full text-[7px] md:text-[9px] font-black uppercase tracking-[.2em] shadow-xl">
                         {product.badgeLabel}
                       </div>
                     )}
                     {product.oldPrice && (
-                      <div className="bg-red-500 text-white px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-[.2em] shadow-xl">
+                      <div className="bg-red-500 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[7px] md:text-[9px] font-black uppercase tracking-[.2em] shadow-xl">
                         HOT
                       </div>
                     )}
                   </div>
 
                   {/* Category Pill Over Image */}
-                  <div className="absolute bottom-6 left-6 bg-white/80 dark:bg-black/80 backdrop-blur-md px-4 py-1.5 rounded-full text-[8px] font-black text-brand-plum dark:text-brand-rosegold uppercase tracking-[.3em] shadow-sm">
+                  <div className="absolute bottom-4 md:bottom-6 left-4 md:left-6 bg-white/80 dark:bg-black/80 backdrop-blur-md px-3 md:px-4 py-1 md:py-1.5 rounded-full text-[7px] md:text-[8px] font-black text-brand-plum dark:text-brand-rosegold uppercase tracking-[.3em] shadow-sm">
                     {product.category}
                   </div>
 
@@ -211,23 +211,23 @@ function ProductsContent() {
                   </div>
                 </div>
 
-                <div className="mt-8 px-2 space-y-3">
-                  <div className="flex items-center gap-1.5">
+                <div className="mt-4 md:mt-8 px-1 md:px-2 space-y-2 md:space-y-3">
+                  <div className="flex items-center gap-1">
                     {[...Array(5)].map((_, i) => (
                       i < Math.floor(rating) ? 
-                        <StarIcon key={i} className="w-4 h-4 text-brand-rosegold" /> : 
-                        <StarOutline key={i} className="w-4 h-4 text-gray-300 dark:text-gray-700" />
+                        <StarIcon key={i} className="w-3 h-3 md:w-4 md:h-4 text-brand-rosegold" /> : 
+                        <StarOutline key={i} className="w-3 h-3 md:w-4 md:h-4 text-gray-300 dark:text-gray-700" />
                     ))}
-                    <span className="text-[11px] font-bold text-gray-400 ml-1">({reviews})</span>
+                    <span className="text-[9px] md:text-[11px] font-bold text-gray-400 ml-1">({reviews})</span>
                   </div>
 
-                  <h3 className="text-2xl font-bold line-clamp-1 group-hover:text-brand-plum dark:group-hover:text-brand-rosegold transition-colors duration-300">{product.name}</h3>
-                  <p className="text-gray-400 text-xs line-clamp-1 italic font-light">{product.description}</p>
+                  <h3 className="text-lg md:text-2xl font-bold line-clamp-1 group-hover:text-brand-plum dark:group-hover:text-brand-rosegold transition-colors duration-300">{product.name}</h3>
+                  <p className="text-gray-400 text-[10px] md:text-xs line-clamp-1 italic font-light">{product.description}</p>
                   
-                  <div className="pt-2 flex items-baseline gap-4">
-                    <p className="font-serif italic text-3xl text-brand-plum dark:text-brand-rosegold font-bold">₵{product.price.toLocaleString()}</p>
+                  <div className="pt-1 md:pt-2 flex items-baseline gap-2 md:gap-4">
+                    <p className="font-serif italic text-xl md:text-3xl text-brand-plum dark:text-brand-rosegold font-bold">₵{product.price.toLocaleString()}</p>
                     {product.oldPrice && (
-                      <p className="text-sm text-gray-400 line-through font-bold">₵{product.oldPrice.toLocaleString()}</p>
+                      <p className="text-[10px] md:text-sm text-gray-400 line-through font-bold">₵{product.oldPrice.toLocaleString()}</p>
                     )}
                   </div>
                 </div>
