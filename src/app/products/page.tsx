@@ -13,6 +13,7 @@ function ProductsContent() {
   const searchParams = useSearchParams();
   const category = searchParams.get('category') || 'All';
 
+  useEffect(() => {
     const url = category && category !== 'All' 
       ? `/api/products?category=${category}` 
       : '/api/products';
