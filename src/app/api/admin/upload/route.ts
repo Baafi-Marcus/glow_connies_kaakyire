@@ -15,10 +15,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Cloudinary not configured in Settings' }, { status: 400 });
   }
 
-  // Configure Cloudinary
-  cloudinary.config({
-    cloudinary_url: settings.cloudinaryUrl
-  });
+  // Configure Cloudinary by parsing URL explicitly
+  const url = settings.cloudinaryUrl;
+  const match = url.match(/cloudinary:\/\/([^:]+):([^@]+)@(.+)/);
+  
+  if (match) {
+    cloudinary.config({
+      api_key: match[1],
+      api_secret: match[2],
+      cloud_name: match[3]
+    });
+  } else {
+    // Fallback if URL is malformed
+    cloudinary.config({
+      cloudinary_url: url
+    });
+  }
 
   try {
     const formData = await req.formData();
