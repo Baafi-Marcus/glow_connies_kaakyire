@@ -21,22 +21,11 @@ export async function POST(req: Request) {
 
   try {
     const keys = settings.geminiKey.split(',').map(k => k.trim()).filter(k => k.length > 0);
-    
-    // Validate key formats
-    const invalidKeys = keys.filter(k => k.startsWith('ghp_'));
-    if (invalidKeys.length > 0) {
-      throw new Error(`Invalid Key Format: You are using GitHub tokens (starting with 'ghp_'). Please use Google Gemini API keys (starting with 'AIza') for AI generation.`);
-    }
-
     const activeKey = keys[Math.floor(Math.random() * keys.length)];
-    if (!activeKey || !activeKey.startsWith('AIza')) {
-       throw new Error(`Invalid Key: The selected key does not appear to be a valid Google Gemini API key.`);
-    }
+    
+    if (!activeKey) throw new Error("No active AI key found.");
 
-    const genAI = new GoogleGenerativeAI(activeKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-    // Fetch the image to send as binary to Gemini
+    // Fetch the image to send as binary
     const imageResp = await fetch(imageUrl);
     const buffer = await imageResp.arrayBuffer();
     const base64 = Buffer.from(buffer).toString('base64');
@@ -51,20 +40,67 @@ export async function POST(req: Request) {
     
     Format: Only return the JSON. No preamble.`;
 
-    const result = await model.generateContent([
-      prompt,
-      {
-        inlineData: {
-          data: base64,
-          mimeType
-        }
-      }
-    ]);
+    let data;
 
-    const text = result.response.text();
-    // Extract JSON from potential Markdown blocks
-    const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
-    const data = JSON.parse(jsonStr);
+    // PROVIDER 1: GitHub Models (ghp_ keys)
+    if (activeKey.startsWith('ghp_') || activeKey.startsWith('github_')) {
+      console.log("[AI] Using GitHub Models Provider");
+      const response = await fetch("https://models.inference.ai.azure.com/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${activeKey}`
+        },
+        body: JSON.stringify({
+          model: "gemini-1.5-flash",
+          messages: [
+            {
+              role: "user",
+              content: [
+                { type: "text", text: prompt },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: `data:${mimeType};base64,${base64}`
+                  }
+                }
+              ]
+            }
+          ],
+          response_format: { type: "json_object" }
+        })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(`GitHub AI Error: ${errData.error?.message || response.statusText}`);
+      }
+
+      const result = await response.json();
+      const text = result.choices[0].message.content;
+      data = JSON.parse(text);
+
+    } 
+    // PROVIDER 2: Google Gemini (AIza keys)
+    else {
+      console.log("[AI] Using Google Gemini Provider");
+      const genAI = new GoogleGenerativeAI(activeKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+      const result = await model.generateContent([
+        prompt,
+        {
+          inlineData: {
+            data: base64,
+            mimeType
+          }
+        }
+      ]);
+
+      const text = result.response.text();
+      const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      data = JSON.parse(jsonStr);
+    }
 
     return NextResponse.json(data);
   } catch (error: unknown) {

@@ -84,7 +84,7 @@ export default function SettingsPage() {
               value={settings.geminiKey}
               onChange={e => setSettings({...settings, geminiKey: e.target.value})}
             />
-            <p className="text-[10px] text-gray-400 leading-relaxed">Required for the automated &quot;AI Suggest&quot;. You can enter multiple keys separated by commas (,) and the system will automatically cycle through them to prevent free-tier rate limits!</p>
+            <p className="text-[10px] text-gray-400 leading-relaxed">Required for the automated &quot;AI Suggest&quot;. You can use either **Google Gemini Keys** (starting with AIza) or **GitHub Models Tokens** (starting with ghp_). Multiple keys can be separated by commas (,) to cycle through them and prevent rate limits!</p>
           </div>
         </div>
 
