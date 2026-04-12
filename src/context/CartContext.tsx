@@ -2,24 +2,41 @@
 
 import { createContext, useContext, useState, ReactNode } from "react";
 
+export type ProductVariant = {
+  id: string;
+  name: string;
+  price: number;
+  oldPrice?: number | null;
+  stock: number;
+  productId: string;
+};
+
 export type Product = {
   id: string;
   name: string;
   description: string;
   price: number;
+  stock: number;
   oldPrice?: number | null;
   imageUrl: string | null;
+  images?: string[];
+  videoUrl?: string | null;
   badgeLabel?: string | null;
   category: string;
   subCategory?: string | null;
+  variants?: ProductVariant[];
 };
 
-export type CartItem = Product & { quantity: number };
+export type CartItem = Product & { 
+  quantity: number;
+  selectedVariant?: ProductVariant | null;
+  cartItemId: string;
+};
 
 type CartContextType = {
   cart: CartItem[];
-  addToCart: (product: Product) => void;
-  removeFromCart: (id: string) => void;
+  addToCart: (product: Product, selectedVariant?: ProductVariant | null) => void;
+  removeFromCart: (cartItemId: string) => void;
   cartTotal: number;
   clearCart: () => void;
   isCartOpen: boolean;
@@ -41,25 +58,30 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product, selectedVariant: ProductVariant | null = null) => {
     setCart((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
+      const cartItemId = selectedVariant ? `${product.id}-${selectedVariant.id}` : product.id;
+      const existing = prev.find((item) => item.cartItemId === cartItemId);
+      
       if (existing) {
         return prev.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+          item.cartItemId === cartItemId ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
-      return [...prev, { ...product, quantity: 1 }];
+      return [...prev, { ...product, quantity: 1, selectedVariant, cartItemId }];
     });
   };
 
-  const removeFromCart = (id: string) => {
-    setCart((prev) => prev.filter((item) => item.id !== id));
+  const removeFromCart = (cartItemId: string) => {
+    setCart((prev) => prev.filter((item) => item.cartItemId !== cartItemId));
   };
 
   const clearCart = () => setCart([]);
 
-  const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const cartTotal = cart.reduce((sum, item) => {
+    const priceToUse = item.selectedVariant ? item.selectedVariant.price : item.price;
+    return sum + priceToUse * item.quantity;
+  }, 0);
 
   return (
     <CartContext.Provider value={{ 

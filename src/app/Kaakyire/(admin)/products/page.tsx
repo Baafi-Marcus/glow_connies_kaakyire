@@ -27,6 +27,9 @@ type Product = {
   subCategory: string | null;
   stock: number;
   lowStockThreshold: number;
+  images: string[];
+  videoUrl: string | null;
+  variants: any[];
 };
 
 export default function InventoryPage() {
@@ -40,7 +43,7 @@ export default function InventoryPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({
-    name: "", description: "", price: "", oldPrice: "", imageUrl: "", badgeLabel: "", category: "Perfumes", subCategory: "", stock: "0", lowStockThreshold: "5", isAvailable: true
+    name: "", description: "", price: "", oldPrice: "", imageUrl: "", images: [] as string[], videoUrl: "", badgeLabel: "", category: "Perfumes", subCategory: "", stock: "0", lowStockThreshold: "5", isAvailable: true, variants: [] as any[]
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkProcessingAction, setIsBulkProcessingAction] = useState(false);
@@ -132,21 +135,32 @@ export default function InventoryPage() {
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
     setIsUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-
+    
     try {
-      const res = await fetch('/api/admin/upload', {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await res.json();
-      if (data.url) {
-        setFormData(prev => ({ ...prev, imageUrl: data.url }));
+      const uploadedUrls: string[] = [];
+      
+      for (const file of files) {
+        const formDataPayload = new FormData();
+        formDataPayload.append('file', file);
+        
+        const res = await fetch('/api/admin/upload', {
+          method: 'POST',
+          body: formDataPayload,
+        });
+        const data = await res.json();
+        if (data.url) uploadedUrls.push(data.url);
+      }
+      
+      if (uploadedUrls.length > 0) {
+        setFormData(prev => ({ 
+          ...prev, 
+          imageUrl: prev.imageUrl || uploadedUrls[0], 
+          images: [...(prev.images || []), ...uploadedUrls] 
+        }));
       }
     } catch (error) {
       console.error('Upload failed', error);
@@ -204,17 +218,20 @@ export default function InventoryPage() {
         price: product.price.toString(),
         oldPrice: product.oldPrice?.toString() || "",
         imageUrl: product.imageUrl || "",
+        images: product.images || [],
+        videoUrl: product.videoUrl || "",
         badgeLabel: product.badgeLabel || "",
         category: product.category,
         subCategory: product.subCategory || "",
         stock: product.stock.toString(),
         lowStockThreshold: product.lowStockThreshold.toString(),
-        isAvailable: product.isAvailable
+        isAvailable: product.isAvailable,
+        variants: product.variants || []
       });
     } else {
       setEditingProduct(null);
       setFormData({
-        name: "", description: "", price: "", oldPrice: "", imageUrl: "", badgeLabel: "", category: "Perfumes", subCategory: "", stock: "0", lowStockThreshold: "5", isAvailable: true
+        name: "", description: "", price: "", oldPrice: "", imageUrl: "", images: [], videoUrl: "", badgeLabel: "", category: "Perfumes", subCategory: "", stock: "0", lowStockThreshold: "5", isAvailable: true, variants: []
       });
     }
     setIsModalOpen(true);
@@ -596,6 +613,7 @@ export default function InventoryPage() {
                   <div className="relative group">
                     <input 
                       type="file" 
+                      multiple
                       accept="image/*" 
                       onChange={handleFileUpload}
                       className="hidden" 
@@ -606,7 +624,7 @@ export default function InventoryPage() {
                       className={`w-full py-4 px-6 rounded-2xl border-2 border-dashed flex items-center justify-center gap-2 cursor-pointer transition-all ${isUploading ? 'border-brand-rosegold/50 bg-brand-rosegold/5 animate-pulse' : 'border-gray-200 dark:border-gray-700 hover:border-brand-rosegold/50 hover:bg-brand-rosegold/5'}`}
                     >
                       <PlusIcon className="w-5 h-5 text-gray-400" />
-                      <span className="text-xs font-bold text-gray-500">{isUploading ? 'Uploading...' : 'Upload from Device'}</span>
+                      <span className="text-xs font-bold text-gray-500">{isUploading ? 'Uploading...' : 'Upload Photos'}</span>
                     </label>
                   </div>
 
@@ -614,22 +632,58 @@ export default function InventoryPage() {
                     <input 
                       className="w-full px-6 py-4 rounded-2xl bg-gray-50 dark:bg-gray-800 border-none outline-none text-xs" 
                       placeholder="Paste Image URL instead..." 
-                      value={formData.imageUrl} 
+                      value={formData.imageUrl || ""} 
                       onChange={e => setFormData({...formData, imageUrl: e.target.value})} 
                     />
                   </div>
                 </div>
 
-                {formData.imageUrl && (
-                  <div className="relative h-40 w-full rounded-2xl overflow-hidden bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
-                    <AppImage src={formData.imageUrl} alt="Preview" fill className="object-contain" />
+                {(formData.images && formData.images.length > 0) || formData.imageUrl ? (
+                  <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                    {Array.from(new Set([formData.imageUrl, ...(formData.images || [])])).filter(Boolean).map((imgUrl, i) => (
+                      <div key={i} className="relative h-24 w-24 shrink-0 rounded-2xl overflow-hidden bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                        <AppImage src={imgUrl!} alt={`Preview ${i}`} fill className="object-cover" />
+                      </div>
+                    ))}
                   </div>
-                )}
+                ) : null}
               </div>
 
               <div className="md:col-span-2 space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Detailed Description</label>
                 <textarea required rows={3} className="w-full px-6 py-4 rounded-2xl bg-gray-50 dark:bg-gray-800 border-none outline-none resize-none" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+              </div>
+
+              <div className="md:col-span-2 space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Showcase Video URL (Cloudinary)</label>
+                <input className="w-full px-6 py-4 rounded-2xl bg-gray-50 dark:bg-gray-800 border-none outline-none" placeholder="e.g. https://res.cloudinary.com/.../video.mp4" value={formData.videoUrl || ""} onChange={e => setFormData({...formData, videoUrl: e.target.value})} />
+              </div>
+
+              <div className="md:col-span-2 space-y-4 pt-4 border-t border-gray-50 dark:border-gray-800">
+                <div className="flex justify-between items-end">
+                   <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Product Variants (Colors, Sizes)</label>
+                   <button 
+                     type="button" 
+                     onClick={() => setFormData(prev => ({...prev, variants: [...prev.variants, { name: "", price: formData.price || "0", oldPrice: "", stock: "0" }]}))}
+                     className="text-[10px] font-black uppercase tracking-widest text-brand-plum dark:text-brand-rosegold hover:opacity-70 flex items-center gap-1.5 transition-opacity"
+                   >
+                     <PlusIcon className="w-4 h-4" /> Add Variant
+                   </button>
+                </div>
+                {formData.variants.length > 0 && (
+                  <div className="space-y-3">
+                    {formData.variants.map((v, idx) => (
+                      <div key={idx} className="flex flex-wrap items-center gap-3 bg-gray-50 dark:bg-gray-800 p-4 rounded-2xl">
+                        <input className="flex-[2] min-w-[150px] px-4 py-2 rounded-xl bg-white dark:bg-[#1E1E1E] text-sm outline-none" placeholder="Variant Name (e.g. Ruby Red)" value={v.name} onChange={e => { const newV = [...formData.variants]; newV[idx].name = e.target.value; setFormData({...formData, variants: newV})}} />
+                        <input type="number" className="flex-1 min-w-[100px] px-4 py-2 rounded-xl bg-white dark:bg-[#1E1E1E] text-sm outline-none" placeholder="Price (GHC)" value={v.price} onChange={e => { const newV = [...formData.variants]; newV[idx].price = e.target.value; setFormData({...formData, variants: newV})}} />
+                        <input type="number" className="flex-1 min-w-[100px] px-4 py-2 rounded-xl bg-white dark:bg-[#1E1E1E] text-sm outline-none" placeholder="Stock" value={v.stock} onChange={e => { const newV = [...formData.variants]; newV[idx].stock = e.target.value; setFormData({...formData, variants: newV})}} />
+                        <button type="button" onClick={() => setFormData(prev => ({...prev, variants: prev.variants.filter((_, i) => i !== idx)}))} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-all">
+                          <TrashIcon className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="md:col-span-2 flex items-center gap-4 py-4 border-t border-gray-50 dark:border-gray-800">

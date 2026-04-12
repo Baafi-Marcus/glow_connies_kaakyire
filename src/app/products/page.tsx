@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 function ProductsContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const { addToCart } = useCart();
+  const { addToCart, setIsCartOpen } = useCart();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -168,8 +168,13 @@ function ProductsContent() {
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 md:gap-x-10 gap-y-12 md:gap-y-20">
           {Array.isArray(sortedProducts) && sortedProducts.map(product => {
             const { rating, reviews } = getProductRating(product.id);
+            const totalStock = product.variants && product.variants.length > 0 
+              ? product.variants.reduce((sum, v) => sum + (v.stock || 0), 0) 
+              : product.stock;
+            const isOutOfStock = totalStock <= 0;
+
             return (
-              <div key={product.id} className="group flex flex-col animate-in fade-in zoom-in-95 duration-700">
+              <div key={product.id} className={`group flex flex-col animate-in fade-in zoom-in-95 duration-700 ${isOutOfStock ? 'opacity-75' : ''}`}>
                 <div 
                   onClick={() => setSelectedProduct(product)}
                   className="relative h-[14rem] md:h-[26rem] bg-gray-50 dark:bg-[#121212] w-full rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden border border-gray-50 dark:border-gray-900 shadow-sm group-hover:shadow-2xl transition-all duration-700 group-hover:-translate-y-2 cursor-pointer"
@@ -188,9 +193,14 @@ function ProductsContent() {
                         {product.badgeLabel}
                       </div>
                     )}
-                    {product.oldPrice && (
+                    {product.oldPrice && !isOutOfStock && (
                       <div className="bg-red-500 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[7px] md:text-[9px] font-black uppercase tracking-[.2em] shadow-xl">
                         HOT
+                      </div>
+                    )}
+                    {isOutOfStock && (
+                      <div className="bg-gray-800 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[7px] md:text-[9px] font-black uppercase tracking-[.2em] shadow-xl">
+                        SOLD OUT
                       </div>
                     )}
                   </div>
@@ -225,12 +235,23 @@ function ProductsContent() {
                     </div>
                     
                     <button 
-                      className="h-10 w-10 md:h-14 md:w-14 bg-brand-plum text-white dark:bg-brand-rosegold dark:text-black rounded-full flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all flex-shrink-0"
+                      className={`h-10 w-10 md:h-14 md:w-14 rounded-full flex items-center justify-center shadow-xl transition-all flex-shrink-0 ${
+                        isOutOfStock 
+                          ? 'bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed' 
+                          : 'bg-brand-plum text-white dark:bg-brand-rosegold dark:text-black hover:scale-110 active:scale-95'
+                      }`}
+                      disabled={isOutOfStock}
                       onClick={(e) => {
                         e.stopPropagation();
-                        addToCart(product);
+                        if (isOutOfStock) return;
+                        if (product.variants && product.variants.length > 0) {
+                          setSelectedProduct(product);
+                        } else {
+                          addToCart(product);
+                          setIsCartOpen(true);
+                        }
                       }}
-                      title="Add to Bag"
+                      title={isOutOfStock ? "Sold Out" : "Add to Bag"}
                     >
                       <PlusIcon className="w-5 h-5 md:w-7 md:h-7" />
                     </button>

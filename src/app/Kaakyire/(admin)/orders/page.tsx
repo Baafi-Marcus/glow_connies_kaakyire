@@ -11,8 +11,9 @@ import {
   XMarkIcon,
   ChevronRightIcon
 } from "@heroicons/react/24/outline";
+import AppImage from "@/components/AppImage";
 
-type OrderItem = { name: string; quantity: number; price: number; };
+type OrderItem = { name: string; quantity: number; price: number; imageUrl?: string; selectedVariant?: { name: string } };
 type Order = { 
   id: string; 
   customerName: string; 
@@ -193,10 +194,24 @@ export default function OrdersPage() {
                    {JSON.parse(JSON.stringify(selectedOrder.items)).map((item: OrderItem, idx: number) => (
                      <div key={idx} className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl">
                         <div className="flex items-center gap-4">
+                           {item.imageUrl ? (
+                             <div className="relative w-12 h-12 bg-white dark:bg-gray-800 rounded-xl overflow-hidden shrink-0">
+                               <AppImage src={item.imageUrl} alt={item.name} fill className="object-cover" />
+                             </div>
+                           ) : (
+                             <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-xl flex items-center justify-center shrink-0">
+                               <ShoppingBagIcon className="w-5 h-5 text-gray-300" />
+                             </div>
+                           )}
                            <div className="w-10 h-10 bg-white dark:bg-gray-800 rounded-xl flex items-center justify-center font-black text-xs text-brand-rosegold">
                               {item.quantity}x
                            </div>
-                           <span className="font-bold text-sm">{item.name}</span>
+                           <div className="flex flex-col">
+                             <span className="font-bold text-sm">{item.name}</span>
+                             {item.selectedVariant && (
+                               <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{item.selectedVariant.name}</span>
+                             )}
+                           </div>
                         </div>
                         <span className="font-serif italic text-brand-plum dark:text-brand-rosegold">GHC {item.price * item.quantity}</span>
                      </div>

@@ -11,17 +11,30 @@ model Product {
   id          String   @id @default(cuid())
   name        String
   description String
-  price       Float
+  price       Float    // Base price
   oldPrice    Float?
-  imageUrl    String?
+  imageUrl    String?  // Main thumbnail
+  images      String[] // Gallery images
+  videoUrl    String?  // Cloudinary video link
   badgeLabel  String?
   isAvailable Boolean  @default(true)
   category    String   @default("General")
   subCategory String?
-  stock       Int      @default(0)
+  stock       Int      @default(0) // Total stock or base stock
   lowStockThreshold Int @default(5)
+  variants    ProductVariant[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model ProductVariant {
+  id        String   @id @default(cuid())
+  name      String   // e.g. "Space Gray", "100ml"
+  price     Float
+  oldPrice  Float?
+  stock     Int      @default(0)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model Order {
