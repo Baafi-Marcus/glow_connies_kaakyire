@@ -44,7 +44,7 @@ export async function POST(req: Request) {
 
     // PROVIDER 1: GitHub Models (ghp_ keys)
     if (activeKey.startsWith('ghp_') || activeKey.startsWith('github_')) {
-      console.log(`[AI] Using GitHub Models Provider for image: ${imageUrl.substring(0, 50)}...`);
+      console.log(`[AI] Using GitHub Models Provider (GPT-4o-mini) for image: ${imageUrl.substring(0, 50)}...`);
       const response = await fetch("https://models.inference.ai.azure.com/chat/completions", {
         method: "POST",
         headers: {
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
           "Authorization": `Bearer ${activeKey}`
         },
         body: JSON.stringify({
-          model: "gemini-1.5-flash",
+          model: "gpt-4o-mini",
           messages: [
             {
               role: "user",
