@@ -21,11 +21,8 @@ export async function POST(req: Request) {
 
   try {
     const keys = settings.geminiKey.split(',').map(k => k.trim()).filter(k => k.length > 0);
-    const activeKey = keys[Math.floor(Math.random() * keys.length)];
     
-    if (!activeKey) throw new Error("No active AI key found.");
-
-    // Fetch the image to send as binary
+    // 1. Fetch the image ONCE to use across all retry attempts
     const imageResp = await fetch(imageUrl);
     const buffer = await imageResp.arrayBuffer();
     const base64 = Buffer.from(buffer).toString('base64');
@@ -40,89 +37,78 @@ export async function POST(req: Request) {
     
     Format: Only return the JSON. No preamble.`;
 
-    let data;
+    let lastError = "All configured AI keys failed to generate a response.";
+    
+    // 2. FAILOVER LOOP: Try each key sequentially until one works
+    for (let i = 0; i < keys.length; i++) {
+        const activeKey = keys[i];
+        console.log(`[AI] Attempt ${i + 1}/${keys.length} using ${activeKey.startsWith('ghp_') ? 'GitHub' : 'Gemini'} key: ${activeKey.substring(0, 8)}...`);
 
-    // PROVIDER 1: GitHub Models (ghp_ keys)
-    if (activeKey.startsWith('ghp_') || activeKey.startsWith('github_')) {
-      console.log(`[AI] Using GitHub Models Provider (GPT-4o-mini) for image: ${imageUrl.substring(0, 50)}...`);
-      const response = await fetch("https://models.inference.ai.azure.com/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${activeKey}`
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [
-            {
-              role: "user",
-              content: [
-                { type: "text", text: prompt },
-                {
-                  type: "image_url",
-                  image_url: {
-                    url: `data:${mimeType};base64,${base64}`
-                  }
-                }
-              ]
-            }
-          ],
-          response_format: { type: "json_object" }
-        })
-      });
-
-      if (!response.ok) {
-        const errText = await response.text();
-        console.error(`[AI] GitHub Provider Error: ${response.status} - ${errText}`);
-        
-        let detailedError = response.statusText;
         try {
-          const errJson = JSON.parse(errText);
-          detailedError = errJson.error?.message || errJson.message || detailedError;
-        } catch (e) {
-          detailedError = errText || detailedError;
+            let text = "";
+
+            // PROVIDER 1: GitHub Models (ghp_ keys)
+            if (activeKey.startsWith('ghp_') || activeKey.startsWith('github_')) {
+                const response = await fetch("https://models.inference.ai.azure.com/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${activeKey}`
+                    },
+                    body: JSON.stringify({
+                        model: "gpt-4o-mini",
+                        messages: [
+                            {
+                                role: "user",
+                                content: [
+                                    { type: "text", text: prompt },
+                                    { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } }
+                                ]
+                            }
+                        ],
+                        response_format: { type: "json_object" }
+                    })
+                });
+
+                if (!response.ok) {
+                    const errMsg = (await response.json())?.error?.message || response.statusText;
+                    throw new Error(`GitHub Provider Error (${response.status}): ${errMsg}`);
+                }
+
+                const result = await response.json();
+                text = result.choices[0].message.content;
+            } 
+            // PROVIDER 2: Google Gemini (AIza keys)
+            else {
+                const genAI = new GoogleGenerativeAI(activeKey);
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                const result = await model.generateContent([
+                    prompt,
+                    { inlineData: { data: base64, mimeType } }
+                ]);
+                text = result.response.text();
+            }
+
+            // SUCCESS: Parse and Return
+            console.log(`[AI] Success on attempt ${i + 1}`);
+            const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            const data = JSON.parse(jsonStr);
+            return NextResponse.json(data);
+
+        } catch (error: any) {
+            console.warn(`[AI] Attempt ${i + 1} failed:`, error.message);
+            lastError = error.message;
+            // Continue to next key in loop
         }
-        
-        throw new Error(`GitHub AI Error (${response.status}): ${detailedError}`);
-      }
-
-      const result = await response.json();
-      const text = result.choices[0].message.content;
-      console.log(`[AI] GitHub Response: ${text.substring(0, 100)}...`);
-      
-      // Extract JSON from potential Markdown blocks (robust parsing)
-      const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
-      data = JSON.parse(jsonStr);
-
-    } 
-    // PROVIDER 2: Google Gemini (AIza keys)
-    else {
-      console.log(`[AI] Using Google Gemini Provider for image: ${imageUrl.substring(0, 50)}...`);
-      const genAI = new GoogleGenerativeAI(activeKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-      const result = await model.generateContent([
-        prompt,
-        {
-          inlineData: {
-            data: base64,
-            mimeType
-          }
-        }
-      ]);
-
-      const text = result.response.text();
-      console.log(`[AI] Google Response: ${text.substring(0, 100)}...`);
-
-      // Extract JSON from potential Markdown blocks
-      const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
-      data = JSON.parse(jsonStr);
     }
 
-    return NextResponse.json(data);
+    // If we reach here, all keys failed
+    throw new Error(`Tried all ${keys.length} keys but could not get a response. Last error: ${lastError}`);
+
   } catch (error: any) {
-    console.error('[AI] Generation Final Catch Error:', error.message || error);
-    const msg = error.message || "Unknown error";
-    return NextResponse.json({ error: 'AI generation failed: ' + msg }, { status: 500 });
+    console.error('[AI] Generation Total Failure:', error.message || error);
+    return NextResponse.json({ 
+        error: 'AI generation failed after trying all keys: ' + (error.message || "Unknown error") 
+    }, { status: 500 });
   }
 }
