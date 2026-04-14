@@ -32,7 +32,7 @@ export default function Homepage() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-0 -mt-8">
+    <div className="flex flex-col gap-0">
       {/* 1. HERO SECTION */}
       <section className="relative h-[90vh] w-full flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">

@@ -23,7 +23,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
         </>
       )}
       
-      <main className={`flex-1 w-full ${isAdminPage ? 'max-w-none' : 'max-w-7xl mx-auto px-6 py-8'}`}>
+      <main className={`flex-1 w-full ${isAdminPage || pathname === '/' ? 'max-w-none' : 'max-w-7xl mx-auto px-6 py-8'}`}>
         {children}
       </main>
       
